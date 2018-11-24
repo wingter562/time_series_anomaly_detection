@@ -8,8 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# Read data from csv and shape it
-raw_data = np.loadtxt(open('raw_data\\new_raw_data.csv', 'rb'), delimiter=',', skiprows=1)
+# Read data from the file
+raw_data = np.loadtxt(open('datasets\\logdata.txt', 'rb'), delimiter=',', skiprows=1)
 
 '''
 # Standardization

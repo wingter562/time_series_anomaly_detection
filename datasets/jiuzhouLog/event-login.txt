@@ -1,0 +1,17 @@
+NAME=LOGIN	BEGIN=2018-10-11	END=2018-11-19	COUNT=9
+event-login:13
+event-login/2018:13
+event-login/2018-10:13
+event-login/2018-10-11:2
+event-login/2018-10-11/00h/1
+event-login/2018-10-11/16h/1
+event-login/2018-10-15:1
+event-login/2018-10-15/14h/1
+event-login/2018-10-16:9
+event-login/2018-10-16/14h/2
+event-login/2018-10-16/15h/2
+event-login/2018-10-16/16h/1
+event-login/2018-10-16/22h/2
+event-login/2018-10-16/23h/2
+event-login/2018-10-19:1
+event-login/2018-10-19/11h/1

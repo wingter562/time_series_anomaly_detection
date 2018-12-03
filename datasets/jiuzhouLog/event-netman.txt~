@@ -1,0 +1,6 @@
+NAME=NETMAN	BEGIN=2018-09-25	END=2018-09-25	COUNT=?
+event-networkmanager:6
+event-networkmanager/2018:6
+event-networkmanager/2018-09:6
+event-networkmanager/2018-09-25:6
+event-networkmanager/2018-09-25/14h/6

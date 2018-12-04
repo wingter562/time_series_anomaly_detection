@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# event_sequence_RNN.py
+# detect_RNN.py
 # The python script is used to learn normal/abnormal patterns from 24-hour event sequences using Recurrent Network.
 # @Author  : wwt
 # @Date    : 2018-10-19

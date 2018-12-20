@@ -5,7 +5,7 @@
 # @Date    : 2018-10-19
 
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler,scale
 import matplotlib.pyplot as plt
 
 
@@ -175,15 +175,21 @@ def normalize(seq):
     scaler.fit(seq)
     return scaler.transform(seq)
 
+# z-score standardization
+# @seq target sequence to rescale
+def zStandardize(seq):
+    return scale(seq)
+
+
 # save cleaned, aligned, normalized data to file
 # @output_f file path to save at
-def saveCleanedData(output_f):
-    # output_f = "training_data"
-    with open(output_f, 'rb') as f:
-        np.savetxt(output_f, seq_mat, delimiter=",")
+def saveCleanedData(output_f, seq_mat):
+    # output_f = "data_norm.txt"
+    with open(output_f, 'w') as f:
+        np.savetxt(output_f, seq_mat, delimiter=",", header="CROND, RSYSLOGD, SESSION, SSHD, SU")
 
 # show data
-def showData():
+def showData(seq_mat):
     # time-line
     t = np.arange(0, seq_mat.shape[0], 1)
     # use matplotlib to visualize the sequences
@@ -220,10 +226,11 @@ def showData():
 
 # main
 
-# built sequences & align them with given time scopes & standardize
+# built sequences & align them with given time scopes
 begin_t = "2018-06-29-00"
 end_t = "2018-11-20-00"
 
+# build one seq from each channel and align them
 seq_crond = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-crond.txt'))
 seq_rsyslogd = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-rsyslogd.txt'))
 seq_session = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-session.txt'))
@@ -240,17 +247,25 @@ seq_mat = np.array([seq_crond,
                     seq_rsyslogd,
                     seq_session,
                     seq_sshd,
-                    seq_su], dtype=np.float32)
+                    seq_su], dtype=float)
 
 seq_mat = np.transpose(seq_mat)
 
 # normalize
-seq_mat = normalize(seq_mat)
+seq_mat_norm = normalize(seq_mat)
+# or, standardize
+seq_mat_std = zStandardize(seq_mat)
 
-print seq_mat
+print seq_mat_norm
+print seq_mat_std
 
-showData()
-#saveCleanedData("training_data")
+# plot
+showData(seq_mat_norm)
+showData(seq_mat_std)
+
+# save cleaned, normalized/standardized data in text file
+#saveCleanedData("data_std.txt", seq_norm_std)
+#saveCleanedData("data_std.txt", seq_mat_std)
 
 
 

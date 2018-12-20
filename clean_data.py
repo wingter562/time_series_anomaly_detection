@@ -5,7 +5,7 @@
 # @Date    : 2018-10-19
 
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler,scale
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
 import matplotlib.pyplot as plt
 
 
@@ -178,7 +178,9 @@ def normalize(seq):
 # z-score standardization
 # @seq target sequence to rescale
 def zStandardize(seq):
-    return scale(seq)
+    scaler = StandardScaler()
+    scaler.fit(seq)
+    return scaler.transform(seq)
 
 
 # save cleaned, aligned, normalized data to file

@@ -191,35 +191,39 @@ def saveCleanedData(output_f, seq_mat):
         np.savetxt(output_f, seq_mat, delimiter=",", header="CROND, RSYSLOGD, SESSION, SSHD, SU")
 
 # show data
-def showData(seq_mat):
+def showData(seq_mat, start_h=0, range=999999):
+
+    # data length and show range
+    end_h = min(range, seq_mat.shape[0])
     # time-line
-    t = np.arange(0, seq_mat.shape[0], 1)
+    t = np.arange(start_h, end_h, 1)
     # use matplotlib to visualize the sequences
     plt.figure(1) # figure 1
 
     # event-CROND
     plt.subplot(321)
-    plt.plot(t, seq_mat[:,0], 'k')
+    plt.plot(t, seq_mat[start_h:end_h, 0], 'k', linewidth=0.3, markersize=0.4)
     plt.title("CROND")
 
     # event-RSYSLOGD
     plt.subplot(322)
-    plt.plot(t, seq_mat[:,1], 'k')
+    plt.plot(t, seq_mat[start_h:end_h, 1], 'k', linewidth=0.3, markersize=0.4)
     plt.title("RSYSLOGD")
+    plt.ylim(ymax=max(seq_mat[:, 1]))
 
     # event-SESSSION
     plt.subplot(323)
-    plt.plot(t, seq_mat[:,2], 'k')
+    plt.plot(t, seq_mat[start_h:end_h, 2], 'k', linewidth=0.3, markersize=0.4)
     plt.title("SESSION")
 
     # event-SSHD
     plt.subplot(324)
-    plt.plot(t, seq_mat[:,3], 'k')
+    plt.plot(t, seq_mat[start_h:end_h, 3], 'k', linewidth=0.3, markersize=0.4)
     plt.title("SSHD")
 
     # event-SU
     plt.subplot(325)
-    plt.plot(t, seq_mat[:,4], 'k')
+    plt.plot(t, seq_mat[start_h:end_h, 4], 'k', linewidth=0.3, markersize=0.4)
     plt.title("SU")
 
     plt.show()
@@ -262,8 +266,8 @@ print seq_mat_norm
 print seq_mat_std
 
 # plot
-showData(seq_mat_norm)
-showData(seq_mat_std)
+showData(seq_mat_norm, start_h=2523, range=3457)
+showData(seq_mat_std, start_h=2523, range=3457)
 
 # save cleaned, normalized/standardized data in text file
 #saveCleanedData("data_std.txt", seq_norm_std)

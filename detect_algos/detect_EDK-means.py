@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # detect_EDK-means.py
-# The python script is used to classify event time series using Euclidean Distance K-means.
+# The python script is used to cluster event time series using Euclidean Distance K-means.
 # @Author  : wwt
 # @Date    : 2018-12-20
 

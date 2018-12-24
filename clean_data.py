@@ -266,8 +266,8 @@ print seq_mat_norm
 print seq_mat_std
 
 # plot
-showData(seq_mat_norm, start_h=2523, range=3457)
-showData(seq_mat_std, start_h=2523, range=3457)
+showData(seq_mat_norm, start_h=1621, range=2129)
+showData(seq_mat_std, start_h=1621, range=2129)
 
 # save cleaned, normalized/standardized data in text file
 #saveCleanedData("data_std.txt", seq_norm_std)

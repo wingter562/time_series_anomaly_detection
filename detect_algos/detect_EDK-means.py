@@ -13,11 +13,14 @@ import matplotlib.pyplot as plot
 n_cls = 2
 #max_loop = 30000
 # the range of data to learn
+data_form = 'std'
 start_h = 0
-end_h = 2129
+end_h = 1621
+save_path = "pred_Kmeans_" + '_NClass' + str(n_cls) + '_' \
+            + data_form + '_' + str(start_h) + "to" + str(end_h) + ".txt"
 
 # read data from the cleaned, normalized/standardized data set
-data = common_funcs.readData("data_std.txt")
+data = common_funcs.readData("data_std.txt", skips=1)
 data = data[start_h:end_h, :]
 
 # invoke in-built k-means
@@ -26,7 +29,16 @@ kmeans_model.fit(data)
 
 
 print(kmeans_model.cluster_centers_)
-# for l in kmeans_model.labels_:
-#    print(l)
-plot.scatter(range(start_h,end_h), kmeans_model.labels_, s=1**2)
+
+# clustering result, i.e., decision function
+dec_func = kmeans_model.labels_
+# convert label==0 to -1, for intuitive comparison with other detectors
+conv = lambda x: x if(x == 1) else -1
+for k in range(0, len(dec_func)):
+    dec_func[k] = conv(dec_func[k])
+
+
+common_funcs.saveData(save_path, dec_func, delim=',', linenum=False)
+
+plot.scatter(range(start_h, end_h), dec_func, s=1**2)
 plot.show()

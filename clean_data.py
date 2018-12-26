@@ -5,7 +5,7 @@
 # @Date    : 2018-10-19
 
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler,StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import matplotlib.pyplot as plt
 
 

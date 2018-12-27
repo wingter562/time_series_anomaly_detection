@@ -8,13 +8,13 @@ import numpy as np
 from common import common_funcs
 from sklearn.ensemble import IsolationForest
 import matplotlib.pyplot as plot
-import matplotlib.axes as ax
 
-### global params
+''' global params '''
 # the range of data to learn
 data_form = 'std'
 start_h = 0
 end_h = 1621
+''' model params '''
 trees = 100
 samples_tree = 256 # 'auto'
 features_tree = 1

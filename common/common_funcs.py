@@ -6,21 +6,27 @@
 import math as math
 import numpy as np
 
-
-# read data from a cleaned data set
-# @fname data file path, abs path
 def readData(fname, skips=1):
+    """
+    # read data from a cleaned data set
+    :param fname: data file path, abs path
+    :param skips: num of lines to skip from beginning
+    :return: data in np.array
+    """
     data = np.loadtxt(fname, dtype=float, delimiter=',', skiprows=skips)
     return data
 
 
-# save mem data to local disk
-# @output_f target file path for saving
-# @data data to save
-# @delim delimiter, default=','
-# @headline headline to print, default=''
-# @linenum enable/disable line number, default=True
 def saveData(output_f, data, delim=',', headline='', linenum=True):
+    """
+    # save mem data to local disk
+    :param output_f: target file path for saving
+    :param data: data to save
+    :param delim: delimiter, default=','
+    :param headline: headline to print, default=''
+    :param linenum: enable/disable line number, default=True
+    :return: N/A
+    """
     # add linenum column
     if linenum:
         data = np.array(data)
@@ -35,10 +41,13 @@ def saveData(output_f, data, delim=',', headline='', linenum=True):
         np.savetxt(output_f, data, delimiter=delim, header=headline)
 
 
-# calculate the Euclidean distance between two vectors
-# @x vector x
-# @y vector y
 def EDist(x, y):
+    """
+    calculate the Euclidean distance between two vectors
+    :param x: vector x
+    :param y: vector y
+    :return: Euclidean distance between the given x and y
+    """
     # get #dimensions
     d_x = np.size(x)
     d_y = np.size(y)
@@ -55,11 +64,55 @@ def EDist(x, y):
     return math.sqrt(sum)
 
 
-# calculate Area Under receiver operating characteristic Curve (AUC)
-# @labels real data labels, 1-normal, -1-abnormal
-# @preds decision functions or labels from detectors
 def calculateAUC(labels, preds):
-    return
+    """
+    # calculate Area Under receiver operating characteristic Curve (AUC), based on
+    # [] Hand, D. J., & Till, R. J. (2001). A simple generalisation of the area under the ROC curve
+    #   for multiple class classification problems. Machine learning, 45(2), 171-186.
+    # AUC ~= (Sa - Na*(Na+1)/2) / Na*Nn,
+    # where Na, Nn are the number of labeled anomalies and normal points, respectively. And
+    # Sa is the sum of ranks of anomalies sorted in ascending order by scoring from a detector.
+    :param labels: real data labels, 1=normal, -1=abnormal
+    :param preds: decision functions or labels given by detectors
+    :return: AUC
+    """
+    # check length equality
+    if len(labels) != len(preds):
+        print("err@calculateAUC: label vec and preds vec must be of same length")
+        return -1
+
+    # count Na and Nn
+    Na = 0
+    Nn = 0
+    for l in labels:
+        if l < 0:
+            Na = Na + 1
+        else:
+            Nn = Nn + 1
+
+    # total samples
+    N = Na + Nn
+
+    # calculate Sa, use a list of tuples
+    Sa = 0
+    pl_list = []
+    for k in range(0, len(labels)):
+        pl_list.append( tuple((preds[k],labels[k])) )
+
+    # sort by preds value in descending order
+    # because anomaly probability is proportional to abs(score) in case of scores < 0
+    pl_list.sort(key=lambda tup: tup[0], reverse=True)
+
+    # sort so as to get ranks
+    for rank in range(0, N):
+        if pl_list[rank][1] < 0:  # '-' label denotes anomalies
+            Sa = Sa + rank
+
+    return (Sa - Na*(Na+1)/2) / Na*Nn
+
+
+
+
 
 ### test block
 #data = readNormData("../data_norm.txt")

@@ -9,11 +9,12 @@ from common import common_funcs
 from sklearn.svm import OneClassSVM
 import matplotlib.pyplot as plot
 
-### global params
+''' global params '''
 # the range of data to learn
 data_form = 'std'
 start_h = 0
 end_h = 1621
+''' model params '''
 SVMKernel = 'rbf'
 gamma = 'scale'
 contamination = 0.1

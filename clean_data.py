@@ -9,8 +9,16 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import matplotlib.pyplot as plt
 
 
-# Count how many hours past so far for a given time point from Jan. 1 that year
+
 def countHours(year, month, day, hour):
+    """
+    # Count how many hours past so far for a given time point from Jan. 1 that year
+    :param year: the year
+    :param month: the month
+    :param day:  the day
+    :param hour: the hour
+    :return: number of hours past in the given year
+    """
     # build a monthly day-counter first
     days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; # from Jan. to Dec.
     # check leap year
@@ -27,11 +35,15 @@ def countHours(year, month, day, hour):
     return days * 24 + hour
 
 
-# DATA CLEANING v.1
-# read data from the raw file
-# remove daily/monthly summary values
-# to finally build a sequence (series)
 def buildSeq_v1(fname):
+    """
+    # DATA CLEANING v.1
+    # read data from the raw file
+    # remove daily/monthly summary values
+    # to finally build a sequence (series)
+    :param fname: raw log file
+    :return:
+    """
     # designed for files like 'datasets/jiuzhouLog/event-crond.txt'
     with open(fname, 'rb') as file_crond:
         # parse head line
@@ -78,9 +90,6 @@ def buildSeq_v1(fname):
                 seq.append(infill)
                 seq.append(count)
 
-
-
-
             last_year = year
             last_month = month
             last_day = day
@@ -88,11 +97,15 @@ def buildSeq_v1(fname):
             line = file_crond.readline()
 
 
-# DATA CLEANING v.2
-# read data from the raw file
-# remove daily/monthly summary values
-# to finally build a sequence (series)
 def buildSeq_v2(fname):
+    """
+    # DATA CLEANING v.2
+    # read data from the raw file
+    # remove daily/monthly summary values
+    # to finally build a sequence (series)
+    :param fname: raw log file
+    :return: the built sequence
+    """
     # designed for files like 'datasets/jiuzhouLog/event-crond.txt'
     # for stripping
     start_idx = -1
@@ -140,11 +153,14 @@ def buildSeq_v2(fname):
     return seq
 
 
-# align all sequences with a designated length of period
-# @start start time point ("yyyy-mm-dd-hh")
-# @end end time point ("yyyy-mm-dd-hh")
-# @seq target sequence
 def alignSeqs(start, end, seq):
+    """
+    # align all sequences with a designated length of period
+    :param start: start time point ("yyyy-mm-dd-hh")
+    :param end: end time point ("yyyy-mm-dd-hh")
+    :param seq: target sequence
+    :return: sequence excerpted
+    """
     # parse times passed in
     y1, m1 ,d1, h1 = start.split('-')
     y1 = int(y1)
@@ -157,41 +173,54 @@ def alignSeqs(start, end, seq):
     m2 = int(m2)
     d2 = int(d2)
     h2 = int(h2)
-    start_idx = countHours(y1, m1 ,d1, h1)
+    start_idx = countHours(y1, m1, d1, h1)
     end_idx = countHours(y2, m2, d2, h2)
 
     return seq[start_idx:end_idx+1]
 
 
-
-#np.loadtxt(, delimiter='/', skiprows=1)
-#raw_event_rsyslogd = np.loadtxt(open('datasets/jiuzhouLog/event-rsyslogd.txt', 'rb'), delimiter='/', skiprows=1)
-
-
-# Normalization
-# @seq target sequence to rescale
 def normalize(seq):
+    """
+    # Normalization
+    :param seq: target sequence to rescale
+    :return: Min-Max Normalized sequence
+    """
     scaler = MinMaxScaler()
     scaler.fit(seq)
     return scaler.transform(seq)
 
-# z-score standardization
-# @seq target sequence to rescale
+
 def zStandardize(seq):
+    """
+    # z-score standardization
+    :param seq: target sequence to rescale
+    :return: Z-score standardized sequence
+    """
     scaler = StandardScaler()
     scaler.fit(seq)
     return scaler.transform(seq)
 
 
-# save cleaned, aligned, normalized data to file
-# @output_f file path to save at
 def saveCleanedData(output_f, seq_mat):
+    """
+    # save cleaned, aligned, normalized data to file
+    :param output_f: file path to save at
+    :param seq_mat: data to save
+    :return: N/A
+    """
     # output_f = "data_norm.txt"
     with open(output_f, 'w') as f:
         np.savetxt(output_f, seq_mat, delimiter=",", header="CROND, RSYSLOGD, SESSION, SSHD, SU")
 
-# show data
+
 def showData(seq_mat, start_h=0, range=999999):
+    """
+    # show data
+    :param seq_mat: data to show
+    :param start_h: beginning time stamp
+    :param range:  maximum length of period, in hour
+    :return: N/A
+    """
 
     # data length and show range
     end_h = min(range, seq_mat.shape[0])
@@ -229,8 +258,7 @@ def showData(seq_mat, start_h=0, range=999999):
     plt.show()
 
 
-
-# main
+''' main '''
 
 # built sequences & align them with given time scopes
 begin_t = "2018-06-29-00"

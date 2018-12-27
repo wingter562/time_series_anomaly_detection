@@ -9,13 +9,13 @@ from common import common_funcs
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plot
 
-### global params
-n_cls = 2
-#max_loop = 30000
+''' global params '''
 # the range of data to learn
 data_form = 'std'
 start_h = 0
 end_h = 1621
+''' model params '''
+n_cls = 2
 save_path = "pred_Kmeans_" + '_NClass' + str(n_cls) + '_' \
             + data_form + '_' + str(start_h) + "to" + str(end_h) + ".txt"
 

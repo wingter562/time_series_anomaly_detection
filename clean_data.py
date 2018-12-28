@@ -100,11 +100,11 @@ def buildSeq_v1(fname):
 def buildSeq_v2(fname):
     """
     # DATA CLEANING v.2
-    # read data from the raw file
+    # read data from the raw file in format: event-crond/2018-06-27/00h/90
     # remove daily/monthly summary values
     # to finally build a sequence (series)
     :param fname: raw log file
-    :return: the built sequence
+    :return: the built sequence, a list of tuples of (timestamp, count)
     """
     # designed for files like 'datasets/jiuzhouLog/event-crond.txt'
     # for stripping
@@ -117,7 +117,9 @@ def buildSeq_v2(fname):
         print "Cleaning event log: %s" % name
 
         # build an all-zero sequence, hourly-based, one year long (enough in our case)
+        # resulting in a temporally continuous sequence
         seq = [0] * 366 * 24
+        #stamps = ["yyyy-mm-dd-hh"] * 366 * 24
 
         # work on the data
         line = f.readline()
@@ -137,6 +139,7 @@ def buildSeq_v2(fname):
 
             # count hours and fill in the sequence
             idx = countHours(year, month, day, hour)
+            #stamps[idx] = date + ':' + str(hour)
             seq[idx] = count
 
             # for stripping
@@ -147,22 +150,67 @@ def buildSeq_v2(fname):
             # move on to the next line
             line = f.readline()
 
-    # strip the sequence and return
-    # return seq[start_idx:end_idx]
-    # return without stripping
+    # return the stamps and count sequence without stripping
     return seq
+
+
+def buildStamps(start, end):
+    """
+    # build a temporally continuous timestamp sequence from the given start to the given end (inclusive)
+    :param start: starting timestamp, yyyy-mm-dd-hh
+    :param end: ending timestamp, yyyy-mm-dd-hh
+    :return: a continuous timestamp sequence, each timestamp consists of 4 integers - year, month, day and hour
+    """
+    days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];  # from Jan. to Dec., 2018
+
+    # define time-increment functions
+    incre_hour = lambda h: h+1 if h < 23 else 0
+    incre_day = lambda d, m: d + 1 if d < days_in_month[m] else 1
+    incre_month = lambda m: m + 1 if m < 12 else 1
+    incre_year = lambda y: y + 1  # deprecated
+
+    # define formatting functions
+    formatted = lambda t: str(t) if t > 9 else '0' + str(t)
+
+    stamps_seq = []
+    y, m, d, h = start.split('-')
+    y = int(y)
+    m = int(m)
+    d = int(d)
+    h = int(h)
+    e_year, e_month, e_day, e_hour = end.split('-')
+
+    stamp = start
+    while stamp != end:
+        stamps_seq.append(stamp)
+        # increment
+        h = incre_hour(h)
+        if h == 0:  # new day
+            d = incre_day(d, m)
+            if d == 1:
+                m = incre_month(m)
+                if m == 1:
+                    y = incre_year(y)
+
+        # update timestamp
+        stamp = str(y) + '-' + formatted(m) + '-' + formatted(d) + '-' + formatted(h)
+
+    # append the ending timestamp
+    stamps_seq.append(end)
+
+    return stamps_seq
 
 
 def alignSeqs(start, end, seq):
     """
-    # align all sequences with a designated length of period
+    # align all sequences within a designated length of period
     :param start: start time point ("yyyy-mm-dd-hh")
     :param end: end time point ("yyyy-mm-dd-hh")
     :param seq: target sequence
     :return: sequence excerpted
     """
     # parse times passed in
-    y1, m1 ,d1, h1 = start.split('-')
+    y1, m1, d1, h1 = start.split('-')
     y1 = int(y1)
     m1 = int(m1)
     d1 = int(d1)
@@ -203,14 +251,15 @@ def zStandardize(seq):
 
 def saveCleanedData(output_f, seq_mat):
     """
-    # save cleaned, aligned, normalized data to file
+    # save cleaned, aligned, normalized data to file, with 1st column as timestamps
     :param output_f: file path to save at
     :param seq_mat: data to save
     :return: N/A
     """
     # output_f = "data_norm.txt"
     with open(output_f, 'w') as f:
-        np.savetxt(output_f, seq_mat, delimiter=",", header="CROND, RSYSLOGD, SESSION, SSHD, SU")
+        np.savetxt(output_f, seq_mat, delimiter=",", fmt='%s, %s, %s, %s, %s, %s',
+                   header="time, CROND, RSYSLOGD, SESSION, SSHD, SU")
 
 
 def showData(seq_mat, start_h=0, range=999999):
@@ -264,12 +313,18 @@ def showData(seq_mat, start_h=0, range=999999):
 begin_t = "2018-06-29-00"
 end_t = "2018-11-20-00"
 
+# build timestamps seq
+seq_time = buildStamps(begin_t, end_t)
+# convert it to a column
+time_column = np.array([seq_time]).T
+
 # build one seq from each channel and align them
 seq_crond = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-crond.txt'))
 seq_rsyslogd = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-rsyslogd.txt'))
 seq_session = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-session.txt'))
 seq_sshd = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-sshd.txt'))
 seq_su = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-su.txt'))
+
 # event-LOGIN, deprecated
 # seq_login =buildSeq_v2('datasets/jiuzhouLog/event-login.txt')
 # event-NETWORKMANAGER, deprecated
@@ -277,6 +332,7 @@ seq_su = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-su.txt
 # missing months for event-USB, deprecated
 # seq_usb = buildSeq_v2('datasets/jiuzhouLog/event-usb.txt')
 
+# build a matrix by removing timestamps in each seq
 seq_mat = np.array([seq_crond,
                     seq_rsyslogd,
                     seq_session,
@@ -290,16 +346,22 @@ seq_mat_norm = normalize(seq_mat)
 # or, standardize
 seq_mat_std = zStandardize(seq_mat)
 
-print seq_mat_norm
-print seq_mat_std
+# build the sequence matrix joint with timestamps
+# it becomes an matrix of str for numpy
+time_seq_mat_norm = np.concatenate((time_column, seq_mat_norm), axis=1)
+time_seq_mat_std = np.concatenate((time_column, seq_mat_std), axis=1)
 
+# print pure channels without stamps
+print seq_mat_std
+print seq_mat_norm
 # plot
-showData(seq_mat_norm, start_h=1621, range=2129)
-showData(seq_mat_std, start_h=1621, range=2129)
+#showData(seq_mat_norm, start_h=0, range=3457)
+#showData(seq_mat_std, start_h=0, range=3457)
+
 
 # save cleaned, normalized/standardized data in text file
-#saveCleanedData("data_std.txt", seq_norm_std)
-#saveCleanedData("data_std.txt", seq_mat_std)
+#saveCleanedData("data_norm.txt", time_seq_mat_norm)
+#saveCleanedData("data_std.txt", time_seq_mat_std)
 
 
 

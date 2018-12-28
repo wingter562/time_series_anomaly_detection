@@ -11,6 +11,7 @@ import matplotlib.pyplot as plot
 
 ''' global params '''
 # the range of data to learn
+data_file = "data_std.txt"
 data_form = 'std'
 start_h = 0
 end_h = 1621
@@ -22,8 +23,9 @@ cr = 0.1 # contamination rate
 save_path = "pred_isoForest_" + "trees" + str(trees) + '_cr' + str(cr) + '_' \
             + data_form + '_' + str(start_h) + "to" + str(end_h) + ".txt"
 
+
 # read data from the cleaned, normalized/standardized data set
-data = common_funcs.readData("data_std.txt", skips=1)
+data = common_funcs.readData(data_file, skips=1, cols=(1, 2, 3, 4, 5))
 data = data[start_h:end_h, :]
 
 # invoke to train in-built iForest model

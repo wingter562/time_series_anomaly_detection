@@ -6,15 +6,17 @@
 import math as math
 import numpy as np
 
-def readData(fname, skips=1, cols=(1,2,3,4,5)):
+
+def readData(fname, skips=1, cols=(0,1,2,3,4,5), datatype = float):
     """
-    # read data from a cleaned data set
+    # read data from a cleaned data set, with column 0 supposed to be timestamp
     :param fname: data file path, abs path
     :param skips: num of lines to skip from beginning
     :param cols: indexes of columns of data to use, begins from 0
+    :param datatype: the structure of a row in the data, containing several fields
     :return: data in np.array
     """
-    data = np.loadtxt(fname, dtype=float, delimiter=',', skiprows=skips, usecols=cols)
+    data = np.loadtxt(fname, dtype=datatype, delimiter=',', skiprows=skips, usecols=cols)
     return data
 
 

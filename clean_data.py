@@ -159,7 +159,7 @@ def buildStamps(start, end):
     # build a temporally continuous timestamp sequence from the given start to the given end (inclusive)
     :param start: starting timestamp, yyyy-mm-dd-hh
     :param end: ending timestamp, yyyy-mm-dd-hh
-    :return: a continuous timestamp sequence, each timestamp consists of 4 integers - year, month, day and hour
+    :return: a continuous timestamp sequence
     """
     days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];  # from Jan. to Dec., 2018
 

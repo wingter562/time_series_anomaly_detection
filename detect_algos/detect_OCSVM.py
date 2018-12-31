@@ -41,7 +41,7 @@ print(dec_func)
 # save the result to file
 common_funcs.saveData(save_path, dec_func, delim=',', linenum=False)
 
-plot.scatter(range(start_h,end_h), dec_func, s=1 ** 2)
+plot.scatter(range(start_h, end_h), dec_func, s=1 ** 2)
 #plot.ylim((-2,2))
 
 # discrimination horizon

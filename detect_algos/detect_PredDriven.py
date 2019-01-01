@@ -158,7 +158,7 @@ def getPredPositions(models, period_to_pred):
     return
 
 
-def getStatsPosition(data_train):
+def getStatsPositions(data_train):
     """
     # get hourly statistical positions from the training data
     Statistical position (SP) is the expected frame position from the distribution of frame vectors of the same hour,
@@ -200,7 +200,7 @@ def getRefPosition(data_train, pred_models, period_to_pred, w):
     ref_pos = [0] * num_channels
 
     # get statistical positions
-    stats_pos = getStatsPosition(data_train);
+    stats_pos = getStatsPositions(data_train);
 
 
 
@@ -214,5 +214,5 @@ def getRefPosition(data_train, pred_models, period_to_pred, w):
 #print(getHourlyFrameSetList(data)[0])  # nice
 #showHourlyAvg(data)
 
-print getStatsPosition(data)[3]  # fine
+print getStatsPositions(data)[3]  # fine
 

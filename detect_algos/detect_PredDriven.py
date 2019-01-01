@@ -7,7 +7,7 @@
 import numpy as np
 from common import common_funcs
 from sklearn.ensemble import IsolationForest
-import matplotlib.pyplot as plot
+import matplotlib.pyplot as plt
 
 
 ''' global params '''
@@ -39,7 +39,7 @@ data = data[start_h:end_h]  # with datatype specified, data is an 1-d array
 
 def getHourlyFrameSetList(data):
     """
-    # divide the the dataset by hour and return a 24-hour-size list of it
+    # Divide the the dataset by hour and return a 24-hour-size list of it
     :param data: set of data in format: <timestamp, feature_1,...,feature_m>
     :return: a list(size=24) of np.array, with the size of each array = num_frames_hourly * features
     """
@@ -66,48 +66,153 @@ def getHourlyFrameSetList(data):
     return hourly_frame_set_list
 
 
-# unfinished
-def getHourlyStats(data):
-    # hourly stats are [24 * [num_channels]] lists
+def getHourlyStats(data, stats_to_get='mean'):
+    """
+    # First get hourly frame sets by calling getHourlyFrameSetList(data),
+    # then compute means & standard deviation in each set
+    :param data: set of data in format: <timestamp, feature_1,...,feature_m>
+    :param stats_to_get: stats to get - 'mean' or 'std_var'
+    :return: hourly statistics, each of which is a list of num_features-dimensional vector
+    # e.g., [mean_f1, mean_f2, mean_f3,..., mean_fm]
+    """
+    # hourly stats lists contain 24 * [f1_aggregated, f2_aggregated, f3_aggregated,...]
     hourly_means = []
-    hourly_stds = []
-    hourly_num_records = [0] * 24
+    hourly_stdvars = []
 
     hourly_frameset_list = getHourlyFrameSetList(data);
 
-    # aggregate by hour
-    hourly_counters = [0, 0, 0, 0, 0]  # sum of 5 channels for a specified hour period
-    hourly_counters_list = []  # 24 hours list
-    for h in range(0, 24, 1):
-        hourly_counters_list.append(hourly_counters)
-        hourly_means.append(hourly_counters)
-        hourly_stds.append(hourly_counters)
-
-    # for each frame record, parse timestamp (frame[0]) and count value (frame[1 to 5]) from each channel
-    # into the corresponding vector of counters
-    for frame in data:
-        stamp = frame[0]  # timestamp
-        hour = int(stamp.split('-')[3])
-
-        hourly_counters_list[hour][0] += frame[1]  # CROND = frame[1]
-        hourly_counters_list[hour][1] += frame[2]  # RSYSLOGD = frame[2]
-        hourly_counters_list[hour][2] += frame[3]  # SESSION = frame[3]
-        hourly_counters_list[hour][3] += frame[4]  # SSHD = frame[4]
-        hourly_counters_list[hour][4] += frame[5]  # SU = frame[5]
-
-        hourly_num_records[hour] += 1
 
     # get average, h=hour, c=channel
     for h in range(0, 24, 1):
-        hourly_means[h] = hourly_frameset_list[h]
-        for c in range(0, 5):
-            hourly_means[h][c] = hourly_counters_list[h][c] / hourly_num_records[h]
-            hourly_stds[h][c] =
+        hourly_means.append(hourly_frameset_list[h].mean(axis=0))  # average over this hourly set for each feature
+        hourly_stdvars.append(hourly_frameset_list[h].std(axis=0))  # without Bessel's correction
+
+    # return hourly statistics, each of which is a list of num_features-dimensional vector
+    # e.g., [mean_f1, mean_f2, mean_f3,..., mean_fm]
+    stats_dict = {}
+    stats_dict['mean'] = hourly_means
+    stats_dict['std_var'] = hourly_stdvars
+
+    return stats_dict.get(stats_to_get, 'N/A')
+
+
+def showHourlyAvg(data):
+    """
+    # show channel averages by hours
+    :param data: set of data in format: <timestamp, feature_1,...,feature_m>
+    :return: N/A
+    """
+    means = getHourlyStats(data, stats_to_get='mean')
+    means = np.array(means)  # for easy slicing
+    print means
+
+    tline = range(0, 24, 1)  # a day
+    plt.figure(1)  # figure 1
+
+    # event-CROND
+    plt.subplot(321)
+    plt.plot(tline, means[:, 0], 'k', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("CROND")
+
+    # event-RSYSLOGD
+    plt.subplot(322)
+    plt.plot(tline, means[:, 1], 'm', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("RSYSLOGD")
+
+    # event-SESSSION
+    plt.subplot(323)
+    plt.plot(tline, means[:, 2], 'c', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("SESSION")
+
+    # event-SSHD
+    plt.subplot(324)
+    plt.plot(tline, means[:, 3], 'y', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("SSHD")
+
+    # event-SU
+    plt.subplot(325)
+    plt.plot(tline, means[:, 4], 'g', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("SU")
+
+    plt.show()
+
+# unfinished
+def boxing():
+    return
+
+# unfinished
+def buildPredictiveModelForOneSlot():
+    return
+
+# unfinished
+def buildPredictiveModels():
+    return
+
+# unfinished
+def getPredPositions(models, period_to_pred):
+    return
+
+
+def getStatsPosition(data_train):
+    """
+    # get hourly statistical positions from the training data
+    Statistical position (SP) is the expected frame position from the distribution of frame vectors of the same hour,
+    # that is, the hourly mean.
+    :param data_train: 1-D array of dtype([(timestamp,'S13'), (feature_1, 'f8'), (feature_2, 'f8'),...,(feature_m, 'f8')])
+    :return: statistical positions as a 24-dimensional list of (avg_f1, avg_f2,...,avg_fm) tuples
+    """
+    hourly_means = getHourlyStats(data_train, stats_to_get='mean')
+    #hourly_stdv = getHourlyStats(data_train, stats_to_get='std_var')
+
+    return hourly_means
+
+
+# unfinished
+def getRefPosition(data_train, pred_models, period_to_pred, w):
+    """
+    # The core of Prediction-driven anomaly detection - estimating the reference position (RP) in which a 'normal'
+    # frame is most likely to appear. Mainly used for evaluation.
+    # Reference position is determined by 'statistical position'(SP) and 'predicted position'(PP).
+    # 1) Statistical position is the expected frame position from the distribution of frame vectors of the same hour,
+    # that is, the hourly mean.
+    #   Get SP by invoking getStatsPosition(data_train)
+    # 2) Predicted position is the speculated frame position based on a window (slot) of previous frames
+    #   Get PP by invoking getPredPositions(models, period_to_pred)
+    # Note: predicted position is only applicable when the predictive model is already trained.
+    #
+    # The desired Reference Position is the weighed combination of 'statistical position' and 'predicted position'
+    # i.e., RP = w*SP + (1-w)*PP,
+    # where w is the tunable parameter to trade off the impact of historical distribution and local trend.
+    :param data_train: training/historical data
+    :param pred_models: predictive models - already trained
+    :param period_to_pred: a given period to calculate reference positions in - continuous
+    :param w: weight parameter - singular
+    :return: Reference position as a frame vector
+    """
+    timestamps = data_train[0]
+
+    num_channels = len(data_train[0]) - 1  # number of features with timestamp exclusive
+    ref_pos = [0] * num_channels
+
+    # get statistical positions
+    stats_pos = getStatsPosition(data_train);
 
 
 
-    return hourly_means, hourly_stds
+    return
 
 
-# test block
-print(getHourlyFrameSetList(data)[1])  # nice
+
+
+
+### test block
+#print(getHourlyFrameSetList(data)[0])  # nice
+#showHourlyAvg(data)
+
+print getStatsPosition(data)[3]  # fine
+

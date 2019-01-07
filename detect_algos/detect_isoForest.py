@@ -28,7 +28,8 @@ samples_tree = 256 # 'auto'
 features_tree = 1
 cr = 0.1 # contamination rate
 save_path = "pred_isoForest_" + "trees" + str(trees) + '_cr' + str(cr) + '_' \
-            + data_form + '_' + str(start_h) + "to" + str(end_h) + ".txt"
+            + data_form + '_' + str(start_h) + "to" + str(end_h) + \
+            '_slotSize' + str(slot_size) + ".txt"
 
 
 # read data from the cleaned, normalized/standardized data set

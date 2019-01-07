@@ -24,8 +24,9 @@ num_models = 24/slot_size if 24%slot_size == 0 else 24/slot_size + 1
 ''' model params '''
 model_name = "Euclidean Distance K-means"
 n_cls = 2
-save_path = "pred_Kmeans_" + '_NClass' + str(n_cls) + '_' \
-            + data_form + '_' + str(start_h) + "to" + str(end_h) + ".txt"
+save_path = "pred_Kmeans_" + '_NClass' + str(n_cls) + \
+            '_' + str(start_h) + "to" + str(end_h) + data_form + \
+            '_slotSize' + str(slot_size) + ".txt"
 
 # read data from the cleaned, normalized/standardized data set
 data = common_funcs.readData(data_file, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=JZLogFrame_type)

@@ -27,7 +27,8 @@ SVMKernel = 'rbf'
 gamma = 'scale'
 contamination = 0.1
 save_path = "pred_OCSVM_" + SVMKernel + '_nu' + str(contamination) + '_' \
-            + data_form + '_' + str(start_h) + "to" + str(end_h) + ".txt"
+            + data_form + '_' + str(start_h) + "to" + str(end_h) + \
+            '_slotSize' + str(slot_size) + ".txt"
 
 
 # read data from the cleaned, normalized/standardized data set

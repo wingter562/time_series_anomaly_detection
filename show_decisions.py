@@ -59,8 +59,8 @@ end_h = 50
 legends = ("K-Means", "OCSVM", "isoForest")
 
 
-pred_files = ["detect_algos/pred_Kmeans__NClass2_std_0to3457.txt",
-              "detect_algos/pred_OCSVM_rbf_nu0.1_std_0to3457.txt",
-              "detect_algos/pred_isoForest_trees100_cr0.1_std_0to3457.txt"]
+pred_files = ["detect_algos/pred_Kmeans__NClass2_0to3457std_slotSize3.txt",
+              "detect_algos/pred_OCSVM_rbf_nu0.1_std_0to3457_slotSize3.txt",
+              "detect_algos/pred_isoForest_trees100_cr0.1_std_0to3457_slotSize3.txt"]
 
 plotDecisions(pred_files, start_h, legends)

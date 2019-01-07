@@ -7,7 +7,42 @@ import math as math
 import numpy as np
 
 
-def readData(fname, skips=1, cols=(0,1,2,3,4,5), datatype = float):
+def countHoursFromInts(year, month, day, hour):
+    """
+    # Count how many hours past so far for a given time point from Jan. 1 that year
+    :param year: the year
+    :param month: the month
+    :param day:  the day
+    :param hour: the hour
+    :return: number of hours past in the given year
+    """
+    # build a monthly day-counter first
+    days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; # from Jan. to Dec.
+    # check leap year
+    if year % 4 == 0:
+        days_in_month[2] = 29
+
+    # count days
+    days = 0
+    for k in range(0, month, 1):
+        days += days_in_month[k]
+    days = days + day - 1
+
+    # count hours
+    return days * 24 + hour
+
+
+def countHoursFromStr(date):
+    """
+    # Count how many hours past so far for a given time point from Jan. 1 that year
+    :param date: date in format "yyyy-mm-dd-hh"
+    :return: number of hours past in the given year
+    """
+    y, m, d, h = date.split('-')
+    return countHoursFromInts(int(y), int(m), int(d), int(h))
+
+
+def readData(fname, skips=1, cols=(0,1,2,3,4,5), datatype=float):
     """
     # read data from a cleaned data set, with column 0 supposed to be timestamp
     :param fname: data file path, abs path
@@ -42,6 +77,78 @@ def saveData(output_f, data, delim=',', headline='', linenum=True):
 
     with open(output_f, 'w') as f:
         np.savetxt(output_f, data, delimiter=delim, header=headline)
+
+
+def getHourlyFrameSets(data, with_timestamp=False):
+    """
+    # Divide the the dataset by hour and return a 24-hour-size list of it
+    :param data: set of data in format: <timestamp, feature_1,...,feature_m>
+    :param with_timestamp: if True, retain timestamp as the first column. Default = False
+    :return: a list(size=24) of lists of tuples, with each tuple in format ( [timestamp], f1, f2,..., fm )
+    """
+    # hourly frame set is a set storing [frames_in_a_hour] frames with sample hour-stamp
+    hourly_frame_set = []
+
+    # hourly_frame_set_list is a 24-size list of hourly_frame_set
+    hourly_frame_set_list = []
+    for h in range(0,24,1):
+        hourly_frame_set_list.append([])  # cannot append variable hourly_frame_set, it would be a pointer
+
+    # dive into the data frame by frame
+    for frame in data:
+        stamp = frame[0]  # timestamp
+        hour = int(stamp.split('-')[3])
+
+        if with_timestamp:
+            hourly_frame_set_list[hour].append((frame[0], frame[1], frame[2], frame[3], frame[4], frame[5]))
+        else:  # add the stamp-stripped record to the corresponding set
+            hourly_frame_set_list[hour].append((frame[1], frame[2], frame[3], frame[4], frame[5]))
+
+    # convert each hourly set to numpy.ndarray
+    # for h in range(0,24,1):
+    #     hourly_frame_set_list[h] = np.array(hourly_frame_set_list[h])
+
+    return hourly_frame_set_list
+
+
+def getFixedSlotFrameSets(data, slot_size, with_timestamp=False, slot_sort_by="hour"):
+    """
+    # divide the time series data by time slots whose sizes are identical as specified. The last slot may be smaller
+    # if 24 % slot_size != 0. Say, data is partitioned into [0, slot_size-1], [slot_size, 2*slot_size-1],...
+    # [..., num_slots*slot_size-1].
+    :param slot_size: the size of time slot, e.g. 3 hours
+    :param data: raw data to be partitioned. Raw data is in format: <timestamp, feature_1,...,feature_m>
+    :param with_timestamp: if True, retain timestamp as the first column. Default = False
+    :param slot_sort_by: sort each slot by day/hour Default = 'date'
+    :return: a list(size=24) of lists of tuples, with each tuple in format ( [timestamp], f1, f2,..., fm )
+    """
+    # the func to check whether an extra slot is needed
+    hasAnExtraSlot = lambda x: 1 if x > 0 else 0
+    num_slots = (24 / slot_size) + hasAnExtraSlot(24 % slot_size)  # num of slots totally
+    fixed_slot_frame_sets = [[] for _ in range(0, num_slots)]  # initialize the list of lists
+
+    last_slot = 24 % slot_size
+
+    hourly_frame_sets = getHourlyFrameSets(data, with_timestamp=True)
+    # loop through the frame sets to add them into corresponding slots
+    for h in range(0, 24, 1):
+        slot_idx = h / slot_size
+        fixed_slot_frame_sets[slot_idx] += hourly_frame_sets[h]
+
+    # sort each slot. Nothing to do if slot_sort_by == 'hour'
+    # '2011-09-01-09' ->2011090109
+    date_to_int_for_comp = \
+        lambda frame: int(frame[0].replace('-', ''))
+    for slot in fixed_slot_frame_sets:
+        if slot_sort_by == "date":
+            slot.sort(key=date_to_int_for_comp)
+
+    # strip timestamp if required
+    if not with_timestamp:
+        for slot_idx in range(0, len(fixed_slot_frame_sets)):
+            fixed_slot_frame_sets[slot_idx] = np.delete(np.array(slot), 0, 1).tolist()
+
+    return fixed_slot_frame_sets
 
 
 def EDist(x, y):
@@ -118,9 +225,12 @@ def calculateAUC(labels, preds):
 
 
 ### test block
-#data = readNormData("../data_norm.txt")
-#print data
-
+# JZLogFrame_type = np.dtype([('timestamp', 'S13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
+#                             ('SESSION', 'f8'), ('SSHD', 'f8'), ('SU', 'f8')])
+# data = readData("../data_std.txt", skips=1, cols=(0,1,2,3,4,5), datatype=JZLogFrame_type)
+# #print getHourlyFrameSets(data, with_timestamp=True)[23]  # good
+#
+# print np.array(getFixedSlotFrameSets(data, 3, False, 'date')[0])  # good
 #print EDist([1,2,3.4], [1,2,3.0])
 
 #print np.mean(np.array([[0,0,0],[3,3,3],[4,4,4]]), axis=0) # along rows

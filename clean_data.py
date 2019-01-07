@@ -7,32 +7,9 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import matplotlib.pyplot as plt
+import common.common_funcs as common_funcs
 
 
-
-def countHours(year, month, day, hour):
-    """
-    # Count how many hours past so far for a given time point from Jan. 1 that year
-    :param year: the year
-    :param month: the month
-    :param day:  the day
-    :param hour: the hour
-    :return: number of hours past in the given year
-    """
-    # build a monthly day-counter first
-    days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]; # from Jan. to Dec.
-    # check leap year
-    if year % 4 == 0:
-        days_in_month[2] = 29
-
-    # count days
-    days = 0
-    for k in range(0, month, 1):
-        days += days_in_month[k]
-    days = days + day - 1
-
-    # count hours
-    return days * 24 + hour
 
 
 def buildSeq_v1(fname):
@@ -138,7 +115,7 @@ def buildSeq_v2(fname):
             day = int(day)
 
             # count hours and fill in the sequence
-            idx = countHours(year, month, day, hour)
+            idx = common_funcs.countHoursFromInts(year, month, day, hour)
             #stamps[idx] = date + ':' + str(hour)
             seq[idx] = count
 
@@ -221,8 +198,8 @@ def alignSeqs(start, end, seq):
     m2 = int(m2)
     d2 = int(d2)
     h2 = int(h2)
-    start_idx = countHours(y1, m1, d1, h1)
-    end_idx = countHours(y2, m2, d2, h2)
+    start_idx = common_funcs.countHoursFromInts(y1, m1, d1, h1)
+    end_idx = common_funcs.countHoursFromInts(y2, m2, d2, h2)
 
     return seq[start_idx:end_idx+1]
 

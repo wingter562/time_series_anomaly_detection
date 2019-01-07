@@ -37,34 +37,6 @@ data = data[start_h:end_h]  # with datatype specified, data is an 1-d array
 
 
 
-def getHourlyFrameSetList(data):
-    """
-    # Divide the the dataset by hour and return a 24-hour-size list of it
-    :param data: set of data in format: <timestamp, feature_1,...,feature_m>
-    :return: a list(size=24) of np.array, with the size of each array = num_frames_hourly * features
-    """
-    # hourly frame set is a set storing [frames_in_a_hour] frames with sample hour-stamp
-    hourly_frame_set = []
-
-    # hourly_frame_set_list is a 24-size list of hourly_frame_set
-    hourly_frame_set_list = []
-    for h in range(0,24,1):
-        hourly_frame_set_list.append([])  # cannot append variable hourly_frame_set, it would be a pointer
-
-    # dive into the data frame by frame
-    for frame in data:
-        stamp = frame[0]  # timestamp
-        hour = int(stamp.split('-')[3])
-
-        # add the stamp-stripped record to the corresponding set
-        hourly_frame_set_list[hour].append((frame[1], frame[2], frame[3], frame[4], frame[5]))
-
-    # convert each hourly set to numpy.ndarray
-    for h in range(0,24,1):
-        hourly_frame_set_list[h] = np.array(hourly_frame_set_list[h])
-
-    return hourly_frame_set_list
-
 
 def getHourlyStats(data, stats_to_get='mean'):
     """
@@ -79,7 +51,7 @@ def getHourlyStats(data, stats_to_get='mean'):
     hourly_means = []
     hourly_stdvars = []
 
-    hourly_frameset_list = getHourlyFrameSetList(data);
+    hourly_frameset_list = common_funcs.getHourlyFrameSets(data);
 
 
     # get average, h=hour, c=channel
@@ -173,7 +145,7 @@ def getStatsPositions(data_train):
 
 
 # unfinished
-def getRefPosition(data_train, pred_models, period_to_pred, w):
+def getRefPositions(data_train, pred_models, period_to_pred, w):
     """
     # The core of Prediction-driven anomaly detection - estimating the reference position (RP) in which a 'normal'
     # frame is most likely to appear. Mainly used for evaluation.
@@ -198,9 +170,21 @@ def getRefPosition(data_train, pred_models, period_to_pred, w):
 
     num_channels = len(data_train[0]) - 1  # number of features with timestamp exclusive
     ref_pos = [0] * num_channels
+    stats_positions = []
 
-    # get statistical positions
-    stats_pos = getStatsPositions(data_train);
+    # get statistical positions for the given period/a sequence of timestamp
+    stats_pos_set = getStatsPositions(data_train)
+    for k in period_to_pred:
+        hourstamp = period_to_pred[k]
+        stats_positions.append(stats_pos_set[hourstamp])
+
+    # get predicted positions
+    pred_pos = getPredPositions(pred_models, period_to_pred)
+
+    # combine
+    ref_pos = w * stats_pos + (1 - w) * pred_pos
+
+
 
 
 
@@ -213,6 +197,5 @@ def getRefPosition(data_train, pred_models, period_to_pred, w):
 ### test block
 #print(getHourlyFrameSetList(data)[0])  # nice
 #showHourlyAvg(data)
-
-print getStatsPositions(data)[3]  # fine
+#print getStatsPositions(data)[3]  # fine
 

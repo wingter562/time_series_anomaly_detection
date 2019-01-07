@@ -23,7 +23,7 @@ def plotDecisions(file_list, start_h, legends):
     #colour_map = np.random.rand(num_predictors)
     for f in file_list:
         # read decisions from each file
-        decs_mat.append(common_funcs.readData(f, skips=0))
+        decs_mat.append(common_funcs.readData(f, skips=0, cols=(0,)))
 
     # rescale the matrix to make intuitive comparison
     for row in range(0, len(decs_mat)):
@@ -55,11 +55,12 @@ def plotDecisions(file_list, start_h, legends):
 ### test block
 # params
 start_h = 0
+end_h = 50
 legends = ("K-Means", "OCSVM", "isoForest")
 
 
-pred_files = ["detect_algos/pred_Kmeans__NClass2_std_0to1621.txt",
-              "detect_algos/pred_OCSVM_rbf_nu0.1_std_0to1621.txt",
-              "detect_algos/pred_isoForest_trees100_cr0.1_std_0to1621.txt"]
+pred_files = ["detect_algos/pred_Kmeans__NClass2_std_0to3457.txt",
+              "detect_algos/pred_OCSVM_rbf_nu0.1_std_0to3457.txt",
+              "detect_algos/pred_isoForest_trees100_cr0.1_std_0to3457.txt"]
 
 plotDecisions(pred_files, start_h, legends)

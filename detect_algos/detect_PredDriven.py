@@ -11,16 +11,16 @@ import matplotlib.pyplot as plt
 
 
 ''' global params '''
-data_form = 'std'
-data_file = "data_std.txt"
 # the range of data to learn
-start_h = 0
-end_h = 1621
-# define data structure for Jiuzhou Log data (normalized/standardized)
-# i.e., timestamp(str), CROND(float),  RSYSLOGD(float), SESSION(float), SSHD(float), SU(float)
+data_file = "data_std.txt"
+data_form = 'std'
 JZLogFrame_type = np.dtype([('timestamp', 'S13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
                             ('SESSION', 'f8'), ('SSHD', 'f8'), ('SU', 'f8')])
-
+start_date = "2018-06-29-00"
+start_h = 0
+end_h = 3457
+slot_size = 3
+num_models = 24/slot_size if 24%slot_size == 0 else 24/slot_size + 1
 
 ''' model params '''
 w = 0.5  # trades off statistical distance and prediction distance
@@ -28,14 +28,13 @@ boxes = 24
 cr = 0.1  # contamination rate that determines anomaly threshold in each box
 
 save_path = "pred_PAS_" + "alpha" + str(w) + '_cr' + str(cr) + '_' \
-            + data_form + '_' + str(start_h) + "to" + str(end_h) + ".txt"
+            + data_form + '_' + str(start_h) + "to" + str(end_h) + \
+            '_slotSize' + str(slot_size) + ".txt"
 
 # read data from the cleaned, normalized/standardized data set
 # timestamps inclusive
 data = common_funcs.readData(data_file, skips=1, cols=(0,1,2,3,4,5), datatype=JZLogFrame_type)
 data = data[start_h:end_h]  # with datatype specified, data is an 1-d array
-
-
 
 
 def getHourlyStats(data, stats_to_get='mean'):

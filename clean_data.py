@@ -11,8 +11,7 @@ import common.common_funcs as common_funcs
 
 
 
-
-def buildSeq_v1(fname):
+def build_seq_v1(fname):
     """
     # DATA CLEANING v.1
     # read data from the raw file
@@ -25,7 +24,7 @@ def buildSeq_v1(fname):
     with open(fname, 'rb') as file_crond:
         # parse head line
         name = file_crond.readline().split('\t')[0];
-        print "Cleaning event log: %s" % name
+        print("Cleaning event log: %s" % name)
 
         # work on the data
         line = file_crond.readline()
@@ -74,7 +73,7 @@ def buildSeq_v1(fname):
             line = file_crond.readline()
 
 
-def buildSeq_v2(fname):
+def build_seq_v2(fname):
     """
     # DATA CLEANING v.2
     # read data from the raw file in format: event-crond/2018-06-27/00h/90
@@ -91,7 +90,7 @@ def buildSeq_v2(fname):
     with open(fname, 'rb') as f:
         # parse head line
         name = f.readline().split('\t')[0];
-        print "Cleaning event log: %s" % name
+        print("Cleaning event log: %s" % name)
 
         # build an all-zero sequence, hourly-based, one year long (enough in our case)
         # resulting in a temporally continuous sequence
@@ -131,7 +130,7 @@ def buildSeq_v2(fname):
     return seq
 
 
-def buildStamps(start, end):
+def build_stamps(start, end):
     """
     # build a temporally continuous timestamp sequence from the given start to the given end (inclusive)
     :param start: starting timestamp, yyyy-mm-dd-hh
@@ -178,7 +177,7 @@ def buildStamps(start, end):
     return stamps_seq
 
 
-def alignSeqs(start, end, seq):
+def align_seqs(start, end, seq):
     """
     # align all sequences within a designated length of period
     :param start: start time point ("yyyy-mm-dd-hh")
@@ -226,7 +225,7 @@ def zStandardize(seq):
     return scaler.transform(seq)
 
 
-def saveCleanedData(output_f, seq_mat):
+def save_cleaned_data(output_f, seq_mat):
     """
     # save cleaned, aligned, normalized data to file, with 1st column as timestamps
     :param output_f: file path to save at
@@ -239,7 +238,7 @@ def saveCleanedData(output_f, seq_mat):
                    header="time, CROND, RSYSLOGD, SESSION, SSHD, SU")
 
 
-def showData(seq_mat, start_h=0, range=999999):
+def show_data(seq_mat, start_h=0, range=999999):
     """
     # show data
     :param seq_mat: data to show
@@ -291,16 +290,16 @@ begin_t = "2018-06-29-00"
 end_t = "2018-11-20-00"
 
 # build timestamps seq
-seq_time = buildStamps(begin_t, end_t)
+seq_time = build_stamps(begin_t, end_t)
 # convert it to a column
 time_column = np.array([seq_time]).T
 
 # build one seq from each channel and align them
-seq_crond = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-crond.txt'))
-seq_rsyslogd = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-rsyslogd.txt'))
-seq_session = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-session.txt'))
-seq_sshd = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-sshd.txt'))
-seq_su = alignSeqs(begin_t, end_t, buildSeq_v2('datasets/jiuzhouLog/event-su.txt'))
+seq_crond = align_seqs(begin_t, end_t, build_seq_v2('datasets/jiuzhouLog/event-crond.txt'))
+seq_rsyslogd = align_seqs(begin_t, end_t, build_seq_v2('datasets/jiuzhouLog/event-rsyslogd.txt'))
+seq_session = align_seqs(begin_t, end_t, build_seq_v2('datasets/jiuzhouLog/event-session.txt'))
+seq_sshd = align_seqs(begin_t, end_t, build_seq_v2('datasets/jiuzhouLog/event-sshd.txt'))
+seq_su = align_seqs(begin_t, end_t, build_seq_v2('datasets/jiuzhouLog/event-su.txt'))
 
 # event-LOGIN, deprecated
 # seq_login =buildSeq_v2('datasets/jiuzhouLog/event-login.txt')
@@ -329,8 +328,8 @@ time_seq_mat_norm = np.concatenate((time_column, seq_mat_norm), axis=1)
 time_seq_mat_std = np.concatenate((time_column, seq_mat_std), axis=1)
 
 # print pure channels without stamps
-print seq_mat_std
-print seq_mat_norm
+print(seq_mat_std)
+print(seq_mat_norm)
 # plot
 #showData(seq_mat_norm, start_h=0, range=3457)
 #showData(seq_mat_std, start_h=0, range=3457)

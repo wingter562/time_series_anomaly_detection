@@ -5,6 +5,7 @@
 
 import math as math
 import numpy as np
+import matplotlib as plt
 
 
 def countHoursFromInts(year, month, day, hour):
@@ -51,7 +52,8 @@ def readData(fname, skips=1, cols=(0,1,2,3,4,5), datatype=float):
     :param datatype: the structure of a row in the data, containing several fields
     :return: data in np.array
     """
-    data = np.loadtxt(fname, dtype=datatype, delimiter=',', skiprows=skips, usecols=cols)
+    # bytes would be return in python 3
+    data = np.loadtxt(fname, dtype=datatype, delimiter=',', skiprows=skips, usecols=cols)  # OK for py2
     return data
 
 
@@ -96,7 +98,9 @@ def getHourlyFrameSets(data, with_timestamp=False):
 
     # dive into the data frame by frame
     for frame in data:
-        stamp = frame[0]  # timestamp
+        stamp = frame[0]  # timestamp, read as np.bytes_ in python 3, but str in py 2
+        # if type(stamp) == bytes or type(stamp) == np.bytes_:
+        #     stamp = stamp.decode('utf-8')
         hour = int(stamp.split('-')[3])
 
         if with_timestamp:
@@ -123,8 +127,8 @@ def getFixedSlotFrameSets(data, slot_size, with_timestamp=False, slot_sort_by="h
     :return: a list(size=24) of lists of tuples, with each tuple in format ( [timestamp], f1, f2,..., fm )
     """
     # the func to check whether an extra slot is needed
-    hasAnExtraSlot = lambda x: 1 if x > 0 else 0
-    num_slots = (24 / slot_size) + hasAnExtraSlot(24 % slot_size)  # num of slots totally
+    #hasAnExtraSlot = lambda x: 1 if x > 0 else 0
+    num_slots = math.ceil(24 / slot_size)  # num of slots totally
     fixed_slot_frame_sets = [[] for _ in range(0, num_slots)]  # initialize the list of lists
 
     last_slot = 24 % slot_size
@@ -132,7 +136,7 @@ def getFixedSlotFrameSets(data, slot_size, with_timestamp=False, slot_sort_by="h
     hourly_frame_sets = getHourlyFrameSets(data, with_timestamp=True)
     # loop through the frame sets to add them into corresponding slots
     for h in range(0, 24, 1):
-        slot_idx = h / slot_size
+        slot_idx = math.floor(h/slot_size)
         fixed_slot_frame_sets[slot_idx] += hourly_frame_sets[h]
 
     # sort each slot. Nothing to do if slot_sort_by == 'hour'
@@ -151,6 +155,82 @@ def getFixedSlotFrameSets(data, slot_size, with_timestamp=False, slot_sort_by="h
     return fixed_slot_frame_sets
 
 
+def getHourlyStats(data, stats_to_get='mean'):
+    """
+    # First get hourly frame sets by calling getHourlyFrameSetList(data),
+    # then compute means & standard deviation in each set
+    :param data: set of data in format: <timestamp, feature_1,...,feature_m>
+    :param stats_to_get: stats to get - 'mean' or 'std_var'
+    :return: hourly statistics, each of which is a list of num_features-dimensional vector
+    # e.g., [mean_f1, mean_f2, mean_f3,..., mean_fm]
+    """
+    # hourly stats lists contain 24 * [f1_aggregated, f2_aggregated, f3_aggregated,...]
+    hourly_means = []
+    hourly_stdvars = []
+
+    hourly_frameset_list = getHourlyFrameSets(data);
+
+
+    # get average, h=hour, c=channel
+    for h in range(0, 24, 1):
+        hourly_means.append(hourly_frameset_list[h].mean(axis=0))  # average over this hourly set for each feature
+        hourly_stdvars.append(hourly_frameset_list[h].std(axis=0))  # without Bessel's correction
+
+    # return hourly statistics, each of which is a list of num_features-dimensional vector
+    # e.g., [mean_f1, mean_f2, mean_f3,..., mean_fm]
+    stats_dict = {}
+    stats_dict['mean'] = hourly_means
+    stats_dict['std_var'] = hourly_stdvars
+
+    return stats_dict.get(stats_to_get, 'N/A')
+
+
+def showHourlyAvg(data):
+    """
+    # show channel averages by hours
+    :param data: set of data in format: <timestamp, feature_1,...,feature_m>
+    :return: N/A
+    """
+    means = getHourlyStats(data, stats_to_get='mean')
+    means = np.array(means)  # for easy slicing
+    #print(means)
+
+    tline = range(0, 24, 1)  # a day
+    plt.figure(1)  # figure 1
+
+    # event-CROND
+    plt.subplot(321)
+    plt.plot(tline, means[:, 0], 'k', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("CROND")
+
+    # event-RSYSLOGD
+    plt.subplot(322)
+    plt.plot(tline, means[:, 1], 'm', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("RSYSLOGD")
+
+    # event-SESSSION
+    plt.subplot(323)
+    plt.plot(tline, means[:, 2], 'c', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("SESSION")
+
+    # event-SSHD
+    plt.subplot(324)
+    plt.plot(tline, means[:, 3], 'y', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("SSHD")
+
+    # event-SU
+    plt.subplot(325)
+    plt.plot(tline, means[:, 4], 'g', linewidth=0.3, markersize=0.4)
+    plt.xticks(np.arange(0, 24, 3))
+    plt.title("SU")
+
+    plt.show()
+
+
 def EDist(x, y):
     """
     calculate the Euclidean distance between two vectors
@@ -164,7 +244,7 @@ def EDist(x, y):
 
     # check validity
     if(d_x != d_y):
-        print "Err@EDist: unequal dimensions of input vectors"
+        print("Err@EDist: unequal dimensions of input vectors")
         return -1
 
     sum = 0

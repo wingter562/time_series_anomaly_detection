@@ -8,14 +8,19 @@ import numpy as np
 from common import common_funcs
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plot
+import sys
 
 ''' global params '''
 data_file = "data_std.txt"
 data_form = 'std'
 # define data structure for Jiuzhou Log data (normalized/standardized)
 # i.e., timestamp(str), CROND(float), RSYSLOGD(float), SESSION(float), SSHD(float), SU(float)
-JZLogFrame_type = np.dtype([('timestamp', 'S13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
+JZLogFrame_type = np.dtype([('timestamp', 'U13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
                             ('SESSION', 'f8'), ('SSHD', 'f8'), ('SU', 'f8')])
+if sys.version_info[0] < 3:  # for py2
+    JZLogFrame_type = np.dtype([('timestamp', 'S13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
+                                ('SESSION', 'f8'), ('SSHD', 'f8'), ('SU', 'f8')])
+
 # the range of data to learn
 start_date = "2018-06-29-00"
 start_h = 0
@@ -33,6 +38,7 @@ save_path = "pred_Kmeans_" + '_NClass' + str(n_cls) + \
 
 # read data from the cleaned, normalized/standardized data set
 data = common_funcs.readData(data_file, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=JZLogFrame_type)
+print(data)
 data = data[start_h:end_h]
 
 
@@ -40,7 +46,7 @@ data = data[start_h:end_h]
 # build slots, totally 24/slot_size slots
 slots = common_funcs.getFixedSlotFrameSets(data, slot_size, True, 'date')
 # decisions set, should be temporally sequential from start_h to end_h
-glob_decisions_map = range(start_h, end_h - start_h)
+glob_decisions_map = list(range(start_h, end_h - start_h))
 # invoke in-built k-means to build a model for each time slot
 # Thus totally num_slots Models are to be built
 model_set = []
@@ -70,9 +76,9 @@ for slot in slots:
     model_set.append(kmeans_model)  # store the model
     print("Info@EDK-means: model id%s stored." % id(kmeans_model))
 
-print "Info@EDK-means: pos_count=%d, neg_count=%d" % (glob_decisions_map.count(1), glob_decisions_map.count(-1))
+print("Info@EDK-means: pos_count=%d, neg_count=%d" % (glob_decisions_map.count(1), glob_decisions_map.count(-1)))
 
-common_funcs.saveData(save_path, glob_decisions_map, delim=',', linenum=False)
+#common_funcs.saveData(save_path, glob_decisions_map, delim=',', linenum=False)
 
 plot.scatter(range(start_h, end_h), glob_decisions_map, s=1 ** 2)
 plot.hlines(y=0, xmin=start_h, xmax=end_h, linestyles='dashed')

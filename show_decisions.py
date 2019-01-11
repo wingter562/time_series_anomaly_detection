@@ -10,11 +10,15 @@ import matplotlib.pyplot as plot
 from sklearn.preprocessing import StandardScaler
 
 
-# plot the decisions(i.e., cluster labels or anomaly scores)
-# @file_list a list of files storing the decisions of detection methods apiece
-# @start_h starting timestamp of the samples under test
-# @legends legends for each plot, tuple
-def plotDecisions(file_list, start_h, legends):
+
+def plot_decisions(file_list, start_h, legends):
+    """
+    # plot the decisions(i.e., cluster labels or anomaly scores)
+    :param file_list: a list of files storing the decisions of detection methods apiece
+    :param start_h: starting timestamp of the samples under test
+    :param legends: legends for each plot, tuple
+    :return: N/A
+    """
     # count candidates
     num_predictors = len(legends)
     # store the decisions of methods in a list
@@ -63,4 +67,4 @@ pred_files = ["detect_algos/pred_Kmeans__NClass2_0to3457std_slotSize3.txt",
               "detect_algos/pred_OCSVM_rbf_nu0.1_std_0to3457_slotSize3.txt",
               "detect_algos/pred_isoForest_trees100_cr0.1_std_0to3457_slotSize3.txt"]
 
-plotDecisions(pred_files, start_h, legends)
+plot_decisions(pred_files, start_h, legends)

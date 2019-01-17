@@ -18,8 +18,11 @@ data_file = "data_std.txt"
 data_form = 'std'
 # define data structure for Jiuzhou Log data (normalized/standardized)
 # i.e., timestamp(str), CROND(float), RSYSLOGD(float), SESSION(float), SSHD(float), SU(float)
-JZLogFrame_type = np.dtype([('timestamp', 'S13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
+JZLogFrame_type = np.dtype([('timestamp', 'U13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
                             ('SESSION', 'f8'), ('SSHD', 'f8'), ('SU', 'f8')])
+if sys.version_info[0] < 3:  # for py2
+    JZLogFrame_type = np.dtype([('timestamp', 'S13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
+                                ('SESSION', 'f8'), ('SSHD', 'f8'), ('SU', 'f8')])
 # the range of data to learn
 start_date = "2018-06-29-00"
 start_h = 0
@@ -39,25 +42,47 @@ save_path = "pred_PAS_" + "alpha" + str(w) + '_cr' + str(cr) + '_' \
 
 # read data from the cleaned, normalized/standardized data set
 # timestamps inclusive
-data = common_funcs.readData(data_file, skips=1, cols=(0,1,2,3,4,5), datatype=JZLogFrame_type)
+data = common_funcs.read_data(data_file, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=JZLogFrame_type)
 data = data[start_h:end_h]  # with datatype specified, data is an 1-d array
+
+
+# TODO: member functions to be finished
+class LocalTrend:
+    """
+    # The object for storing the local trend (the slope between two adjacent frames)
+    # Local trend is a vector in multivariate time series starting at some point (origin)
+    # Member:
+    #   dimension: the dimension/number of channels
+    #   origin: the starting time which is a timestamp/sequence number
+    #   local_trend: the vector of slopes, e.g., (0.2, 0.3, 0.4)
+    """
+    def __init__(self, dimension, origin, local_trend):
+        self.dimension = dimension
+        self.origin = origin
+        self.local_trend = local_trend
+
+    def get_dimension(self):
+        return self.dimension
+
 
 
 class Trend:
     """
-    # The Trend object for storing trend vector(multi-channel slopes, essentially) and its center
-    # Trend can be formatted as [trend_center_1 : trend_vector_1()]
+    # The object for storing trend vector(multi-channel slopes, essentially) and its center
+    # Trend can be formatted as [local_trend_obj0, local_trend_obj1, ...]
     # Member:
-    #   dimension: the dimension of the trend
-    #   span: the length of the trend, i.e., number of frames covered
-    #   center: the center of the trend which is a timestamp/sequence number
-    #   trend: the vector of slopes (or sig(slope)), e.g., (0.1, 0.7, 0.3)
+    #   dimension: the dimension of the trend (channels per local trend)
+    #   span: the length of the trend, i.e., number of intervals covered
+    #   origin: the starting time of the trend which is a timestamp/sequence number
+    #   trend: a list of LocalTrends, e.g., [(0.1,0.7,0.3), (0.2,0.3,0.4),..., ()]
     """
-    def __init__(self, dimension, length, center, span):
+    def __init__(self, dimension, span, origin, trend=None):
         self.dimension = dimension
-        self.length = length
-        self.center = center
         self.span = span
+        self.origin = origin
+        self.trend = trend
+
+        self.origin = trend[0].get_origin()  # set trend origin to its 1st local trend's origin
 
     def get_dimension(self):
         return self.dimension
@@ -65,28 +90,21 @@ class Trend:
     def get_span(self):
         return self.length
 
-    def get_center(self):
-        return self.center
+    def get_origin(self):
+        return self.origin
 
-    def get_trend_vector(self):
-        return self.span
-
-    def get_start_time(self):
-        """
-        # only applicable to sequence numbered trends
-        :return: Etarting time of the trend as a sequence number
-        """
-        return self.get_center() - math.floor(self.get_span())
+    def get_trend(self):
+        return self.trend
 
     def get_end_time(self):
         """
         # only applicable to sequence numbered trends
         :return: End time of the trend as a sequence number
         """
-        return self.get_center() + math.floor(self.get_span())
+        return self.get_origin() + math.floor(self.get_span())
 
 
-# TODO: functions like get_trend are to be finished
+# TODO: member functions like get_trend are to be finished
 class TrendsBuffer:
     """
     # The class is defined to store already-predicted trend objects in a queue

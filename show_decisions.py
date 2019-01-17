@@ -27,7 +27,7 @@ def plot_decisions(file_list, start_h, legends):
     #colour_map = np.random.rand(num_predictors)
     for f in file_list:
         # read decisions from each file
-        decs_mat.append(common_funcs.readData(f, skips=0, cols=(0,)))
+        decs_mat.append(common_funcs.read_data(f, skips=0, cols=(0,)))
 
     # rescale the matrix to make intuitive comparison
     for row in range(0, len(decs_mat)):

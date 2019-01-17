@@ -114,7 +114,7 @@ def build_seq_v2(fname):
             day = int(day)
 
             # count hours and fill in the sequence
-            idx = common_funcs.countHoursFromInts(year, month, day, hour)
+            idx = common_funcs.count_hours_from_ints(year, month, day, hour)
             #stamps[idx] = date + ':' + str(hour)
             seq[idx] = count
 
@@ -197,8 +197,8 @@ def align_seqs(start, end, seq):
     m2 = int(m2)
     d2 = int(d2)
     h2 = int(h2)
-    start_idx = common_funcs.countHoursFromInts(y1, m1, d1, h1)
-    end_idx = common_funcs.countHoursFromInts(y2, m2, d2, h2)
+    start_idx = common_funcs.count_hours_from_ints(y1, m1, d1, h1)
+    end_idx = common_funcs.count_hours_from_ints(y2, m2, d2, h2)
 
     return seq[start_idx:end_idx+1]
 

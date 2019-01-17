@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib as plt
 
 
-def countHoursFromInts(year, month, day, hour):
+def count_hours_from_ints(year, month, day, hour):
     """
     # Count how many hours past so far for a given time point from Jan. 1 that year
     :param year: the year
@@ -33,17 +33,17 @@ def countHoursFromInts(year, month, day, hour):
     return days * 24 + hour
 
 
-def countHoursFromStr(date):
+def count_hours_from_str(date):
     """
     # Count how many hours past so far for a given time point from Jan. 1 that year
     :param date: date in format "yyyy-mm-dd-hh"
     :return: number of hours past in the given year
     """
     y, m, d, h = date.split('-')
-    return countHoursFromInts(int(y), int(m), int(d), int(h))
+    return count_hours_from_ints(int(y), int(m), int(d), int(h))
 
 
-def readData(fname, skips=1, cols=(0,1,2,3,4,5), datatype=float):
+def read_data(fname, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=float):
     """
     # read data from a cleaned data set, with column 0 supposed to be timestamp
     :param fname: data file path, abs path
@@ -57,7 +57,7 @@ def readData(fname, skips=1, cols=(0,1,2,3,4,5), datatype=float):
     return data
 
 
-def saveData(output_f, data, delim=',', headline='', linenum=True):
+def save_data(output_f, data, delim=',', headline='', linenum=True):
     """
     # save mem data to local disk
     :param output_f: target file path for saving
@@ -81,7 +81,7 @@ def saveData(output_f, data, delim=',', headline='', linenum=True):
         np.savetxt(output_f, data, delimiter=delim, header=headline)
 
 
-def getHourlyFrameSets(data, with_timestamp=False):
+def get_hourly_frame_sets(data, with_timestamp=False):
     """
     # Divide the the dataset by hour and return a 24-hour-size list of it
     :param data: set of data in format: <timestamp, feature_1,...,feature_m>
@@ -115,7 +115,7 @@ def getHourlyFrameSets(data, with_timestamp=False):
     return hourly_frame_set_list
 
 
-def getFixedSlotFrameSets(data, slot_size, with_timestamp=False, slot_sort_by="hour"):
+def get_fixed_slot_frame_sets(data, slot_size, with_timestamp=False, slot_sort_by="hour"):
     """
     # divide the time series data by time slots whose sizes are identical as specified. The last slot may be smaller
     # if 24 % slot_size != 0. Say, data is partitioned into [0, slot_size-1], [slot_size, 2*slot_size-1],...
@@ -133,7 +133,7 @@ def getFixedSlotFrameSets(data, slot_size, with_timestamp=False, slot_sort_by="h
 
     last_slot = 24 % slot_size
 
-    hourly_frame_sets = getHourlyFrameSets(data, with_timestamp=True)
+    hourly_frame_sets = get_hourly_frame_sets(data, with_timestamp=True)
     # loop through the frame sets to add them into corresponding slots
     for h in range(0, 24, 1):
         slot_idx = math.floor(h/slot_size)
@@ -155,7 +155,7 @@ def getFixedSlotFrameSets(data, slot_size, with_timestamp=False, slot_sort_by="h
     return fixed_slot_frame_sets
 
 
-def getHourlyStats(data, stats_to_get='mean'):
+def get_hourly_stats(data, stats_to_get='mean'):
     """
     # First get hourly frame sets by calling getHourlyFrameSetList(data),
     # then compute means & standard deviation in each set
@@ -168,7 +168,7 @@ def getHourlyStats(data, stats_to_get='mean'):
     hourly_means = []
     hourly_stdvars = []
 
-    hourly_frameset_list = getHourlyFrameSets(data);
+    hourly_frameset_list = get_hourly_frame_sets(data);
 
 
     # get average, h=hour, c=channel
@@ -185,13 +185,13 @@ def getHourlyStats(data, stats_to_get='mean'):
     return stats_dict.get(stats_to_get, 'N/A')
 
 
-def showHourlyAvg(data):
+def show_hourly_avg(data):
     """
     # show channel averages by hours
     :param data: set of data in format: <timestamp, feature_1,...,feature_m>
     :return: N/A
     """
-    means = getHourlyStats(data, stats_to_get='mean')
+    means = get_hourly_stats(data, stats_to_get='mean')
     means = np.array(means)  # for easy slicing
     #print(means)
 
@@ -254,7 +254,7 @@ def EDist(x, y):
     return math.sqrt(sum)
 
 
-def calculateAUC(labels, preds):
+def calculate_AUC(labels, preds):
     """
     # calculate Area Under receiver operating characteristic Curve (AUC), based on
     # [] Hand, D. J., & Till, R. J. (2001). A simple generalisation of the area under the ROC curve

@@ -37,14 +37,14 @@ save_path = "pred_Kmeans_" + '_NClass' + str(n_cls) + \
             '_slotSize' + str(slot_size) + ".txt"
 
 # read data from the cleaned, normalized/standardized data set
-data = common_funcs.readData(data_file, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=JZLogFrame_type)
+data = common_funcs.read_data(data_file, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=JZLogFrame_type)
 print(data)
 data = data[start_h:end_h]
 
 
 # get slot-wise data
 # build slots, totally 24/slot_size slots
-slots = common_funcs.getFixedSlotFrameSets(data, slot_size, True, 'date')
+slots = common_funcs.get_fixed_slot_frame_sets(data, slot_size, True, 'date')
 # decisions set, should be temporally sequential from start_h to end_h
 glob_decisions_map = list(range(start_h, end_h - start_h))
 # invoke in-built k-means to build a model for each time slot
@@ -55,8 +55,8 @@ model_set = []
 for slot in slots:
     time_seq = np.array(slot)[:, 0].tolist()  # get timestamp sequence and transform it to hour-index sequence
     for k in range(len(time_seq)):
-        time_seq[k] = common_funcs.countHoursFromStr(time_seq[k])  # convert t to absolute time
-        time_seq[k] -= common_funcs.countHoursFromStr(start_date)  # now t is the hour index
+        time_seq[k] = common_funcs.count_hours_from_str(time_seq[k])  # convert t to absolute time
+        time_seq[k] -= common_funcs.count_hours_from_str(start_date)  # now t is the hour index
 
     kmeans_model = KMeans(n_clusters=n_cls)
     kmeans_model.fit(np.delete(np.array(slot), 0, 1))  # feed timestamp-stripped slot data

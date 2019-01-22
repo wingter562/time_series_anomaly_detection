@@ -1,4 +1,3 @@
-NAME=RSYSLOGD	BEGIN=2018-06-28	END=2018-11-20	COUNT=177
 event-rsyslogd/2018-06-28/02h/6
 event-rsyslogd/2018-06-29/02h/6
 event-rsyslogd/2018-06-30/02h/6

@@ -1,4 +1,3 @@
-NAME=SSHD	BEGIN=2018-06-27	END=2018-11-20	COUNT=3510
 event-sshd/2018-06-27/00h/8
 event-sshd/2018-06-27/15h/12
 event-sshd/2018-06-27/16h/3

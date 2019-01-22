@@ -1,0 +1,27 @@
+# input data config
+data_file: data_std.txt
+rescale: std
+num_channels: 5
+data_format_py3:
+  - [timestamp, U13]
+  - [CROND, f8]
+  - [RSYSLOGD, f8]
+  - [SESSION, f8]
+  - [SSHD, f8]
+  - [SU, f8]
+data_format_py2:
+  - [timestamp, S13]
+  - [CROND, f8]
+  - [RSYSLOGD, f8]
+  - [SESSION, f8]
+  - [SSHD, f8]
+  - [SU, f8]
+headlines: 1
+training_data_size_limit: 3457
+# slotting config
+slot_size: 3  # disable slotting by assigning slot_size to -1
+# model parameters
+model_name: Euclidean Distance K-means
+num_clusters: 2
+decision_save_path: pred_EDKmeans.txt
+model_save_path: saved_model.yaml

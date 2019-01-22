@@ -11,7 +11,7 @@ import matplotlib.pyplot as plot
 import sys
 
 ''' global params '''
-data_file = "data_std.txt"
+data_file = "../preprocessed_data/data_std.txt"
 data_form = 'std'
 # define data structure for Jiuzhou Log data (normalized/standardized)
 # i.e., timestamp(str), CROND(float), RSYSLOGD(float), SESSION(float), SSHD(float), SU(float)
@@ -46,7 +46,7 @@ data = data[start_h:end_h]
 # get slot-wise data
 # build slots, totally 24/slot_size slots
 slots = common_funcs.get_fixed_slot_frame_sets(data, slot_size, True, 'date')
-# decisions set, should be temporally sequential from start_h to end_h
+# training_set_decisions set, should be temporally sequential from start_h to end_h
 glob_decisions_map = list(range(start_h, end_h - start_h))
 # invoke in-built k-means to build a model for each time slot
 # Thus totally num_slots Models are to be built
@@ -78,9 +78,9 @@ for slot in slots:
     # force minor class label to be '-1', and positive label '1'
     local_decisions_map = isoForest_model.decision_function(np.delete(np.array(slot), 0, 1)).tolist()
 
-    # mapping decisions of this slot-local model to the global decision map
+    # mapping training_set_decisions of this slot-local model to the global decision map
     for idx in range(len(time_seq)):
-        glob_decisions_map[time_seq[idx]] = local_decisions_map[idx]  # store decisions
+        glob_decisions_map[time_seq[idx]] = local_decisions_map[idx]  # store training_set_decisions
 
     model_set.append(isoForest_model)  # store the model
     print("Info@isoForest: model id%s stored." % id(isoForest_model))

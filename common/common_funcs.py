@@ -53,11 +53,11 @@ def read_data(fname, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=float):
     :return: data in np.array
     """
     # bytes would be return in python 3
-    data = np.loadtxt(fname, dtype=datatype, delimiter=',', skiprows=skips, usecols=cols)  # OK for py2
+    data = np.loadtxt(fname, dtype=datatype, delimiter=',', skiprows=skips, usecols=cols)
     return data
 
 
-def save_data(output_f, data, delim=',', headline='', linenum=True):
+def save_data(output_f, data, delim=',', headline='', format='%s', linenum=True):
     """
     # save mem data to local disk
     :param output_f: target file path for saving
@@ -77,8 +77,8 @@ def save_data(output_f, data, delim=',', headline='', linenum=True):
 
         data = np.concatenate((nums, data), axis=1)
 
-    with open(output_f, 'w') as f:
-        np.savetxt(output_f, data, delimiter=delim, header=headline)
+    with open(output_f, 'w+') as f:
+        np.savetxt(output_f, data, delimiter=delim, header=headline, fmt=format)
 
 
 def get_hourly_frame_sets(data, with_timestamp=False):
@@ -95,6 +95,7 @@ def get_hourly_frame_sets(data, with_timestamp=False):
     hourly_frame_set_list = []
     for h in range(0,24,1):
         hourly_frame_set_list.append([])  # cannot append variable hourly_frame_set, it would be a pointer
+    num_channels = len(data[0]) - 1
 
     # dive into the data frame by frame
     for frame in data:
@@ -104,9 +105,10 @@ def get_hourly_frame_sets(data, with_timestamp=False):
         hour = int(stamp.split('-')[3])
 
         if with_timestamp:
-            hourly_frame_set_list[hour].append((frame[0], frame[1], frame[2], frame[3], frame[4], frame[5]))
+            frame_tuple = tuple([frame[i] for i in range(0, num_channels + 1)])
         else:  # add the stamp-stripped record to the corresponding set
-            hourly_frame_set_list[hour].append((frame[1], frame[2], frame[3], frame[4], frame[5]))
+            frame_tuple = tuple([frame[i] for i in range(1, num_channels + 1)])
+        hourly_frame_set_list[hour].append(frame_tuple)
 
     # convert each hourly set to numpy.ndarray
     # for h in range(0,24,1):
@@ -123,7 +125,7 @@ def get_fixed_slot_frame_sets(data, slot_size, with_timestamp=False, slot_sort_b
     :param slot_size: the size of time slot, e.g. 3 hours
     :param data: raw data to be partitioned. Raw data is in format: <timestamp, feature_1,...,feature_m>
     :param with_timestamp: if True, retain timestamp as the first column. Default = False
-    :param slot_sort_by: sort each slot by day/hour Default = 'date'
+    :param slot_sort_by: sort each slot by day/hour Default = 'hour'
     :return: a list(size=24) of lists of tuples, with each tuple in format ( [timestamp], f1, f2,..., fm )
     """
     # the func to check whether an extra slot is needed
@@ -305,14 +307,14 @@ def calculate_AUC(labels, preds):
 
 
 ### test block
-# JZLogFrame_type = np.dtype([('timestamp', 'S13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
+# JZLogFrame_type = np.dtype([('timestamp', 'U13'), ('CROND', 'f8'), ('RSYSLOGD', 'f8'),
 #                             ('SESSION', 'f8'), ('SSHD', 'f8'), ('SU', 'f8')])
-# data = readData("../data_std.txt", skips=1, cols=(0,1,2,3,4,5), datatype=JZLogFrame_type)
-# #print getHourlyFrameSets(data, with_timestamp=True)[23]  # good
-#
-# print np.array(getFixedSlotFrameSets(data, 3, False, 'date')[0])  # good
-#print EDist([1,2,3.4], [1,2,3.0])
+# data = read_data("../preprocessed_data/data_std.txt", skips=1, cols=(0,1,2,3,4,5), datatype=JZLogFrame_type)
+# print(get_hourly_frame_sets(data, with_timestamp=True)[23])  # good
 
-#print np.mean(np.array([[0,0,0],[3,3,3],[4,4,4]]), axis=0) # along rows
+# print np.array(getFixedSlotFrameSets(data, 3, False, 'date')[0])  # good
+# print EDist([1,2,3.4], [1,2,3.0])
+#
+# print np.mean(np.array([[0,0,0],[3,3,3],[4,4,4]]), axis=0) # along rows
 
 

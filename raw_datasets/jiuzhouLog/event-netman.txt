@@ -1,4 +1,3 @@
-NAME=NETMAN	BEGIN=2018-09-25	END=2018-09-25	COUNT=1
 event-networkmanager:6
 event-networkmanager/2018:6
 event-networkmanager/2018-09:6

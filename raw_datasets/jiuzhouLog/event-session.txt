@@ -1,4 +1,3 @@
-NAME=SESSION	BEGIN=2018-06-27	END=2018-11-20	COUNT=3510
 event-session/2018-06-27/00h/2
 event-session/2018-06-27/15h/2
 event-session/2018-06-27/16h/1

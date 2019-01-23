@@ -40,6 +40,9 @@ Multiple Unsupervised approaches to Detection in multivariate time series data.
                 |saved_model.mdl     # persistence of the model on disk
                 |train_res_OCSVM.txt   # detections made in our training
             |others
+        |examples
+            |example1   # an demonstration of how to detect anomalies using OCSVM detector
+            |raw_log_files   # file containing raw log data
         |preprocessed_data
             |data_norm.txt    # aggregated, normalized data
             |data_std.txt     # aggregated, standardized data

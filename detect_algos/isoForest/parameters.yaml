@@ -22,7 +22,10 @@ test_data_range_limit: [-1, -1]  # no limit by assigning it to [-1,-1]
 # slotting config
 slot_size: 3  # disable slotting by assigning slot_size to -1
 # model parameters
-model_name: Euclidean Distance K-means
-num_clusters: 2
-decision_save_path: train_result_EDKmeans.txt
-model_save_path: saved_model.yaml
+model_name: Isolation Forest
+trees: 100
+samples_tree: 256 # 'auto'
+features_tree: 1
+cr: 0.1 # contamination rate
+decision_save_path: train_result_isoForest.txt
+model_save_path: saved_model.mdl

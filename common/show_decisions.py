@@ -11,11 +11,11 @@ from sklearn.preprocessing import StandardScaler
 
 
 
-def plot_decisions(file_list, start_h, legends=None):
+def plot_decisions(file_list, span=(-1, -1), legends=None):
     """
     # plot the training_set_decisions(i.e., cluster labels or anomaly scores)
     :param file_list: a list of files storing the training_set_decisions of detection methods apiece
-    :param start_h: starting timestamp of the samples under test
+    :param span: starting timestamp of the samples under test, default = full range
     :param legends: legends for each plot, tuple
     :return: N/A
 
@@ -47,16 +47,24 @@ def plot_decisions(file_list, start_h, legends=None):
         row_max = decs_mat[row].max()
         decs_mat[row] = decs_mat[row]/row_max
 
-
+    # define range
     n = decs_mat[0].shape[0]
-    t = range(start_h, start_h+n, 1)
+    if span[0] == -1 or span[0] > span[1] or span[1] == -1:
+        print("Err@show_decisions: invalid range given, show all the decisions instead...")
+        show_from = 0
+        show_to = n
+    else:
+        show_from = span[0]
+        show_to = span[1]
+
+    t = range(show_from, show_to, 1)
 
 
     # plot handles
     h = []
     # plot decision of each frame by each predictor
     for k in range(0, num_predictors):
-        h.append(plot.scatter(t, decs_mat[k], c=colour_map[k], s=1**2))
+        h.append(plot.scatter(t, decs_mat[k][show_from:show_to], c=colour_map[k], s=1**2))
 
     # draw legends
     if legends:  # if legends assigned
@@ -68,14 +76,13 @@ def plot_decisions(file_list, start_h, legends=None):
     plot.title("decision functions('anomalies'<0)")
 
     # discrimination horizon
-    plot.hlines(y=0, xmin=start_h, xmax=start_h+n, linestyles='dashed')
+    plot.hlines(y=0, xmin=show_from, xmax=show_to, linestyles='dashed')
     #plot.ylim((-1, 1))
     plot.show()
 
 
 
-### example 1
-# params
+## example 1
 # start_h = 0
 # end_h = 50
 # legends = ("K-Means", "OCSVM", "isoForest")
@@ -85,4 +92,4 @@ def plot_decisions(file_list, start_h, legends=None):
 #               "../training_set_decisions/pred_OCSVM_rbf_nu0.1_std_0to3457_slotSize3.txt",
 #               "../training_set_decisions/pred_isoForest_trees100_cr0.1_std_0to3457_slotSize3.txt"]
 #
-# plot_decisions(pred_files, start_h, legends)
+# plot_decisions(pred_files, span=(0, 3457), legends=legends)

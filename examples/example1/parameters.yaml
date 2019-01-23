@@ -17,12 +17,14 @@ data_format_py2:
   - [SSHD, f8]
   - [SU, f8]
 headlines: 1
-training_data_range_limit: [-1, -1]  # no limit by assigning it to [-1,-1]
-test_data_range_limit: [-1, -1]  # no limit by assigning it to [-1,-1]
+training_data_range_limit: [0, 3000]  # no limit by assigning it to [-1,-1]
+test_data_range_limit: [3000, 3457]  # no limit by assigning it to [-1,-1]
 # slotting config
 slot_size: 3  # disable slotting by assigning slot_size to -1
 # model parameters
-model_name: Euclidean Distance K-means
-num_clusters: 2
-decision_save_path: train_result_EDKmeans.txt
-model_save_path: saved_model.yaml
+model_name: One Class SVM
+SVMKernel: rbf
+gamma: scale
+contamination: 0.1
+decision_save_path: train_result_OCSVM.txt
+model_save_path: saved_model.mdl

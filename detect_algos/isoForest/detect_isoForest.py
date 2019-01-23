@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # detect_EDK-means.py
-# The python script is used to cluster event time series using Euclidean Distance K-means.
+# The python script is used to detect abnormal frames in event time series using Isolation Forest.
 # @Author  : wwt
-# @Date    : 2018-1 2-20
+# @Date    : 2018-12-25
 
 import numpy as np
 from common import common_funcs
-from sklearn.cluster import KMeans
+from sklearn.ensemble import IsolationForest
 import matplotlib.pyplot as plot
 import sys
 import yaml
+import pickle
 
 
 
@@ -24,7 +25,7 @@ def fit(train_file='data_std.txt', config='parameters.yaml', model_file='', slot
     :param plotting: if True then plot the decisions on training data, no plotting if False
     :return: decision functions on training data
     """
-    print("INFO@detect_EDK-means: loading cfg file...")
+    print("INFO@OCSVM: loading cfg file...")
     # load yaml config file
     with open(config, 'r') as cfg:
         params = yaml.load(cfg)
@@ -58,7 +59,10 @@ def fit(train_file='data_std.txt', config='parameters.yaml', model_file='', slot
 
     ''' load model params '''
     model_name = params['model_name']
-    n_cls = params['num_clusters']
+    trees = params['trees']
+    samples_tree = params['samples_tree']
+    features_tree = params['features_tree']
+    cr = params['cr']  # contamination rate
     decisions_save_path = params['decision_save_path']
     if not model_file:
         model_save_path = params['model_save_path']
@@ -77,15 +81,15 @@ def fit(train_file='data_std.txt', config='parameters.yaml', model_file='', slot
     start_date = train_data[training_data_range_limit[0]][0]
     train_data = train_data[training_data_range_limit[0]: training_data_range_limit[1]]
 
-    #print(train_data)
-    print("INFO@detect_EDK-means: Number of slots = %d" % num_models)
-    print("INFO@detect_EDK-means: Model training in each slot starts...")
+    # print(train_data)
+    print("INFO@IsoForest: Number of slots = %d" % num_models)
+    print("INFO@IsoForest: Model training in each slot starts...")
 
     # slotting
     slots = common_funcs.get_fixed_slot_frame_sets(train_data, slot_size, True, 'date')
     # training_set_decisions set, should be temporally sequential from start_hour_shift to end_h
     glob_decisions_map = list(range(training_data_range_limit[0], training_data_range_limit[1]))
-    model_set = {}
+    model_set = []
 
     # fit/train model one by one for each slot
     model_id = 0
@@ -95,38 +99,41 @@ def fit(train_file='data_std.txt', config='parameters.yaml', model_file='', slot
             time_seq[k] = common_funcs.count_hours_from_str(time_seq[k])  # convert stamp to absolute time
             time_seq[k] -= common_funcs.count_hours_from_str(start_date)  # further trans to hour index starting from 0
 
-        kmeans_model = KMeans(n_clusters=n_cls)
-        kmeans_model.fit(np.delete(np.array(slot), 0, 1))  # feed timestamp-stripped slot data
+        # invoke to train in-built iForest model
+        # [1]Liu, Fei Tony, Ting, Kai Ming and Zhou, Zhi-Hua. "Isolation forest."
+        #     Data Mining, 2008. ICDM'08. Eighth IEEE International Conference on.
+        # [2]Liu, Fei Tony, Ting, Kai Ming and Zhou, Zhi-Hua. "Isolation-based anomaly detection."
+        #     ACM Transactions on Knowledge Discovery from Data (TKDD) 6.1 (2012): 3.
+        #
+        # @n_estimator number of isolation trees
+        # @max_samples number of samples to be isolated in each tree, 'auto'=256(2**8) as demonstrated on p.9, [2]
+        # @contamination contamination rate, directly determines the threshold
+        # @max_features features used in a tree, optimal value=1 as shown in Fig.11, [2]
+        # @bootstrap sampling with/without replacement, 'False'=without replacement
+        # @behavior
+        isoforest = IsolationForest(n_estimators=trees, max_samples='auto', contamination=cr,
+                                          max_features=features_tree, bootstrap=False, behaviour='new')
+        isoforest.fit(np.delete(np.array(slot), 0, 1))  # feed timestamp-stripped slot data
 
-        print("INFO@EDK-means: EDK-means cluster centers of MODEL #%d:" % model_id)
-        for c in kmeans_model.cluster_centers_:
-            print(c)
         # cache each slot-wise model
-        model_set['EDK-means model#'+str(model_id)+' centers'] = kmeans_model.cluster_centers_.tolist()
-        print("INFO@EDK-means: model id%s stored." % id(kmeans_model))
+        model_set.append(isoforest)
+        print("INFO@IsoForest: model id%s cached." % id(isoforest))
         model_id += 1
 
         # force minor class label to be '-1', and positive label '1'
-        local_decisions_map = kmeans_model.labels_.tolist()  # 0 or 1 originally
-        zeroes = local_decisions_map.count(0)
-        ones = local_decisions_map.count(1)
-        minor_class = 0 if zeroes < ones else 1
-        for k in range(len(local_decisions_map)):
-            local_decisions_map[k] = -1 if local_decisions_map[k] == minor_class else 1
+        local_decisions_map = isoforest.decision_function(np.delete(np.array(slot), 0, 1)).tolist()
 
         # mapping training_set_decisions of this slot-local model to the global decision map
         for idx in range(len(time_seq)):
             glob_decisions_map[time_seq[idx]] = local_decisions_map[idx]  # store training_set_decisions
 
-    # dump models to disk
-    print("INFO@EDK-means: Dumping models into %s" % model_save_path)
-    with open(model_save_path, 'w+') as msp:
-        yaml.dump(model_set, msp)
-
-    print("INFO@EDK-means: pos_count=%d, neg_count=%d" % (glob_decisions_map.count(1), glob_decisions_map.count(-1)))
+    # dump models to disk as binary file using pickle
+    print("INFO@IsoForest: Dumping models into %s" % model_save_path)
+    with open(model_save_path, 'wb') as msp:
+        pickle.dump(model_set, msp)
 
     # save training data decisions to disk
-    print("INFO@EDK-means: Dumping decisions of training data into %s" % decisions_save_path)
+    print("INFO@IsoForest: Dumping decisions of training data into %s" % decisions_save_path)
     decisions_with_stamps = np.array([train_data, glob_decisions_map]).T
     common_funcs.save_data(decisions_save_path, decisions_with_stamps, linenum=False)
 
@@ -140,7 +147,7 @@ def fit(train_file='data_std.txt', config='parameters.yaml', model_file='', slot
     return decisions_with_stamps
 
 
-def detect(test_file='', config='parameters.yaml', model_file='saved_model.yaml', plotting=True):
+def detect(test_file='', config='parameters.yaml', model_file='saved_model.mdl', plotting=True):
     """
     # Detect anomalies in the specified data from a file using pre-trained models
     :param test_file: data file containing test data in the format like:
@@ -152,7 +159,7 @@ def detect(test_file='', config='parameters.yaml', model_file='saved_model.yaml'
     :param plotting: if True then plot the decisions on test data, no plotting if False
     :return: decisions on the test data
     """
-    print("INFO@detect_EDK-means: loading cfg file...")
+    print("INFO@IsoForest: loading cfg file...")
     # load yaml config file
     with open(config, 'r') as cfg:
         params = yaml.load(cfg)
@@ -182,7 +189,10 @@ def detect(test_file='', config='parameters.yaml', model_file='saved_model.yaml'
 
     ''' load model params '''
     model_name = params['model_name']
-    n_cls = params['num_clusters']
+    trees = params['trees']
+    samples_tree = params['samples_tree']
+    features_tree = params['features_tree']
+    cr = params['cr']  # contamination rate
     decisions_save_path = params['decision_save_path']
     model_save_path = params['model_save_path']
 
@@ -202,12 +212,11 @@ def detect(test_file='', config='parameters.yaml', model_file='saved_model.yaml'
     end_date = test_data[test_data_range_lim[1] - 1][0]
     test_data = test_data[test_data_range_lim[0]: test_data_range_lim[1]]
 
-
     # load model(s) from file
-    print("INFO@detect_EDK-means: loading model(s)...")
-    with open(model_file) as f:
-        models = yaml.load(f)
-    print("INFO@detect_EDK-means: %d model(s) are loaded into memory..." % len(models))
+    print("INFO@IsoForest: loading model(s)...")
+    with open(model_file, 'rb') as mdl:
+        models = pickle.load(mdl)
+    print("INFO@IsoForest: %d model(s) are loaded into memory..." % len(models))
 
     # slotting
     slot_id = 0
@@ -220,58 +229,50 @@ def detect(test_file='', config='parameters.yaml', model_file='saved_model.yaml'
             time_seq[k] -= common_funcs.count_hours_from_str(start_date)  # further trans to hour index starting from 0
 
         # load the corresponding slot-wise model
-        kmeans_model = KMeans(n_clusters=n_cls)
-        kmeans_model.cluster_centers_ = np.array(models['EDK-means model#' + str(slot_id) + ' centers'])
+        isoforest = models[slot_id]
 
         # make decisions for test data in this slot
-        local_decisions_map = kmeans_model.predict(np.delete(np.array(slot), 0, 1)).tolist()  # timestamp stripped
-
-        # force minor class label to be '-1', and positive label '1'
-        zeroes = local_decisions_map.count(0)
-        ones = local_decisions_map.count(1)
-        minor_class = 0 if zeroes < ones else 1
-        for k in range(len(local_decisions_map)):
-            local_decisions_map[k] = -1 if local_decisions_map[k] == minor_class else 1
+        local_decisions_map = isoforest.decision_function(np.delete(np.array(slot), 0, 1)).tolist()  # timestamp stripped
 
         # mapping training_set_decisions of this slot-local model to the global decision map
         for idx in range(len(time_seq)):
             glob_decisions_map[time_seq[idx]] = local_decisions_map[idx]  # store training_set_decisions
-
         # ready for the next slot
         slot_id += 1
-
-    print("INFO@EDK-means: pos_count=%d, neg_count=%d" % (glob_decisions_map.count(1), glob_decisions_map.count(-1)))
 
     # plot results
     if plotting:
         plot.scatter(range(test_data_range_lim[0], test_data_range_lim[1]), glob_decisions_map, s=1 ** 2)
         plot.hlines(y=0, xmin=test_data_range_lim[0], xmax=test_data_range_lim[1], linestyles='dashed')
-        plot.title(model_name + "\ndecision map (+1/-1 denotes normality/anomaly)")
+        plot.title(model_name + "\ndecision map (+/- denotes normality/anomaly)")
         plot.xlabel('Timeline(hour)')
-        plot.text(test_data_range_lim[0], -0.5, start_date, rotation=90)
-        plot.text(test_data_range_lim[1], -0.5, end_date, rotation=90)
+        plot.text(test_data_range_lim[0], 0, start_date, rotation=90)
+        plot.text(test_data_range_lim[1], 0, end_date, rotation=90)
         plot.show()
 
-    print("INFO@EDK-means: detection finished, decisions returned...")
+    print("INFO@IsoForest: detection finished, decisions returned...")
     return glob_decisions_map
 
 
-def get_model_params(model_file='saved_model.yaml'):
+def get_model_params(model_file='saved_model.mdl'):
     """
     # return model parameters
     :param model_file: the file path where the model is saved
     :return: model parameters
     """
     params = {}
-    with open(model_file, 'r') as mf:
-        models = yaml.load(mf)
+    with open(model_file, 'rb') as mf:
+        models = pickle.load(mf)
 
     params['num_models(slots)'] = len(models)
-    params['models'] = models
+    params['models'] = models[0].get_params()
 
     return params
 
+
 ### test examples
-#fit(train_file='data_std.txt', config='parameters.yaml', slotting=True, plotting=True)
-#print(detect(test_file='data_std.txt',config='parameters.yaml',model_file='saved_model.yaml',plotting=True))
-#print(get_model_params(model_file='saved_model.yaml'))
+#fit('data_std.txt', 'parameters.yaml', slotting=True, plotting=True)
+#print(detect(test_file='data_std.txt'))
+#print(get_model_params())
+
+

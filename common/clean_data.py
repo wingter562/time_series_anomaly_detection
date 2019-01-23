@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # clean_data.py
 # The python script is used to present views of the event sequences, after performing data cleaning
-# by combining separate, raw event count files (e.g., ~/raw_datasets/jiuzhouLog/event-crond.txt) into
+# by combining separate, raw event count files (e.g., ~/raw_datasets/raw_log_files/event-crond.txt) into
 # an aggregated, normalized/standardized matrix (with each row as a frame containing timestamp and counts of events),
 # which will finally be written to a disk file (e.g., ~/preprocessed_data/data_norm.txt)
 # @Author  : wwt
@@ -23,7 +23,7 @@ def build_seq_v1(fname):
     :param fname: raw log file
     :return:
     """
-    # designed for files like 'raw_datasets/jiuzhouLog/event-crond.txt'
+    # designed for files like 'raw_datasets/raw_log_files/event-crond.txt'
     with open(fname, 'rb') as file_crond:
         # parse head line
         name = file_crond.readline().split('\t')[0];
@@ -85,7 +85,7 @@ def build_seq_v2(fname, with_timestamp=False, headers=0):
     :param fname: raw log file
     :return: the built sequence, a list of tuples of (timestamp, count)
     """
-    # designed for files like 'raw_datasets/jiuzhouLog/event-crond.txt'
+    # designed for files like 'raw_datasets/raw_log_files/event-crond.txt'
     # for stripping
     start_idx = -1
     end_idx = -1
@@ -357,7 +357,7 @@ def show_data(seq_mat, start_h=0, range=999999):
 '''The main API for data pre-processing'''
 def preprocess_data(raw_files_list, out_fname, headers=0, rescale='std', begin_time='', end_time=''):
     """
-    # Read raw data files (e.g., ~/raw_datasets/jiuzhouLog/event-crond.txt), combine them into an aggregated,
+    # Read raw data files (e.g., ~/raw_datasets/raw_log_files/event-crond.txt), combine them into an aggregated,
     # normalized/standardized matrix (with each row as a frame containing timestamp and counts of events) in memory,
     # and finally write to a specified disk file (e.g., ~/preprocessed_data/data_norm.txt)
     :param raw_files_list: raw data to be preprocessed, content should be in format: event-name/yyyy-mm-dd/hh/count
@@ -399,11 +399,11 @@ def preprocess_data(raw_files_list, out_fname, headers=0, rescale='std', begin_t
         channels.append(align_seqs(begin_t, end_t, build_seq_v2(file, headers=headers)))
 
     # event-LOGIN, deprecated
-    # seq_login =buildSeq_v2('raw_datasets/jiuzhouLog/event-login.txt')
+    # seq_login =buildSeq_v2('raw_datasets/raw_log_files/event-login.txt')
     # event-NETWORKMANAGER, deprecated
-    # seq_netman = buildSeq_v2('raw_datasets/jiuzhouLog/event-netman.txt')
+    # seq_netman = buildSeq_v2('raw_datasets/raw_log_files/event-netman.txt')
     # missing months for event-USB, deprecated
-    # seq_usb = buildSeq_v2('raw_datasets/jiuzhouLog/event-usb.txt')
+    # seq_usb = buildSeq_v2('raw_datasets/raw_log_files/event-usb.txt')
 
     # build a matrix by removing timestamps in each seq
     channels_mat = np.array(channels, dtype=float)
@@ -421,8 +421,8 @@ def preprocess_data(raw_files_list, out_fname, headers=0, rescale='std', begin_t
     time_seq_mat_std = np.concatenate((time_column, seq_mat_std), axis=1)
 
     # print pure channels without stamps
-    print(seq_mat_std)
-    print(seq_mat_norm)
+    #print(seq_mat_std)
+    #print(seq_mat_norm)
     # plot
     # showData(seq_mat_norm, start_h=0, range=3457)
     # showData(seq_mat_std, start_h=0, range=3457)
@@ -443,11 +443,11 @@ def preprocess_data(raw_files_list, out_fname, headers=0, rescale='std', begin_t
 
 
 # test examples
-# raw_files_list = ['../raw_datasets/jiuzhouLog/event-crond.txt',
-#                  '../raw_datasets/jiuzhouLog/event-rsyslogd.txt',
-#                  '../raw_datasets/jiuzhouLog/event-session.txt',
-#                  '../raw_datasets/jiuzhouLog/event-sshd.txt',
-#                  '../raw_datasets/jiuzhouLog/event-su.txt']
+# raw_files_list = ['../raw_datasets/raw_log_files/event-crond.txt',
+#                  '../raw_datasets/raw_log_files/event-rsyslogd.txt',
+#                  '../raw_datasets/raw_log_files/event-session.txt',
+#                  '../raw_datasets/raw_log_files/event-sshd.txt',
+#                  '../raw_datasets/raw_log_files/event-su.txt']
 # print(preprocess_data(raw_files_list,
 #                       '../preprocessed_data/data_norm.txt',
 #                       0, 'norm', '2018-06-29-00', '2018-11-20-00'))

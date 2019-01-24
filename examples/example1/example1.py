@@ -4,13 +4,18 @@
 # @Author  : wwt
 # @Date    : 2019-01-22
 
+import sys
+# module path, i.e., the absolute directory path of Unsupervised-Anomaly-Detection/
+sys.path.append("C:/wwt/projects/codes/Unsupervised-Anomaly-Detection")
+
 import common.common_funcs as cf  # common APIs for reading/saving/extracting/formating data, etc.
 import common.clean_data as clean
 import detect_algos.OCSVM.detect_OCSVM as ocsvm  # our implementation of One Class SVM anomaly detector
 
-if __name__ == "__main__":
-    # execute only if run as a script
 
+
+# execute only if run as a script
+if __name__ == "__main__":
     # locate raw files
     raw_files_list = ['../raw_log_files/event-crond.txt',
                       '../raw_log_files/event-rsyslogd.txt',
@@ -34,11 +39,13 @@ if __name__ == "__main__":
                                 headers=0, rescale='std', begin_time='2018-06-29-00', end_time='2018-11-20-00'))
 
     # train OCSVM on the first 3000 data records, as specified in the config file (parameters.yaml)
+    # i.e., 2018-06-29 to 2018-10-31
     # after training, the model(s) will be saved to the path specified by model_file argument
     ocsvm.fit(train_file='data_std.txt', config='parameters.yaml', model_file='saved_model.mdl',
               slotting=True, plotting=False)
 
     # test OCSVM on the last 457 data records, as per the config file (parameters.yaml)
+    # i.e., 2018-11-01 to 2018-11-20
     res = ocsvm.detect(test_file='data_std.txt', config='parameters.yaml', model_file='saved_model.mdl',
                        plotting=True)
     print(res)

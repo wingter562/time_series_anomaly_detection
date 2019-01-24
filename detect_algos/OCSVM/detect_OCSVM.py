@@ -63,8 +63,7 @@ def fit(train_file='data_std.txt', config='parameters.yaml', model_file='', slot
     gamma = params['gamma']
     contamination = params['contamination']
     decisions_save_path = params['decision_save_path']
-    if not model_file:
-        model_save_path = params['model_save_path']
+    model_save_path = model_file if model_file else params['model_save_path']
 
     # read data from the cleaned, normalized/standardized data set
     train_data = common_funcs.read_data(train_file,

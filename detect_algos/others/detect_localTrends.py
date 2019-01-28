@@ -44,32 +44,3 @@ save_path = "pred_PAS_" + "alpha" + str(w) + '_cr' + str(cr) + '_' \
 # timestamps inclusive
 data = common_funcs.read_data(data_file, skips=1, cols=(0, 1, 2, 3, 4, 5), datatype=JZLogFrame_type)
 data = data[start_h:end_h]  # with datatype specified, data is an 1-d array
-
-
-# TODO: member functions to be finished
-class LocalTrend:
-    """
-    # The object for storing the local trend (the slope between two adjacent frames)
-    # Local trend is a vector in multivariate time series starting at some point (origin)
-    # Member:
-    #   dimension: the dimension/number of channels
-    #   origin: the starting time which is a timestamp/sequence number
-    #   local_trend: the vector of slopes, e.g., (0.2, 0.3, 0.4)
-    """
-    def __init__(self, dimension, origin, local_trend):
-        self.dimension = dimension
-        self.origin = origin
-        self.local_trend = local_trend
-
-    def get_dimension(self):
-        return self.dimension
-
-
-
-
-
-### test block
-#print(getHourlyFrameSetList(data)[0])  # nice
-#showHourlyAvg(data)
-#print getStatsPositions(data)[3]  # fine
-

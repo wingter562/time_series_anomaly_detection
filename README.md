@@ -22,21 +22,21 @@ Multiple Unsupervised approaches to Detection in multivariate time series data.
                 |data_norm.txt       # identical to that in preprocessed_data
                 |data_std.txt        # identical to that in preprocessed_data
                 |detect_EDK-means.py   # fitting and training APIs for K-means
-                |parameters.py       # parameters of data input and model
+                |parameters.yaml       # parameters of data input and model
                 |saved_model.yaml    # persistence of the model on disk
                 |train_res_EDKmeans.txt   # detections made in our training
             |isoForest
                 |data_norm.txt       # identical to that in preprocessed_data
                 |data_std.txt        # identical to that in preprocessed_data
                 |detect_isoForest.py   # fitting and training APIs for Isolation Forest detector
-                |parameters.py       # parameters of data input and model
+                |parameters.yaml        # parameters of data input and model
                 |saved_model.mdl     # persistence of the model on disk
                 |train_res_isoforest.txt   # detections made in our training
             |OCSVM
                 |data_norm.txt       # identical to that in preprocessed_data
                 |data_std.txt        # identical to that in preprocessed_data
                 |detect_isoForest.py   # fitting and training APIs for One Class SVM
-                |parameters.py       # parameters of data input and model
+                |parameters.yaml        # parameters of data input and model
                 |saved_model.mdl     # persistence of the model on disk
                 |train_res_OCSVM.txt   # detections made in our training
             |others

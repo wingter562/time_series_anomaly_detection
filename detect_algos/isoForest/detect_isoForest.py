@@ -20,7 +20,7 @@ def fit(train_file='data_std.txt', config='parameters.yaml', model_file='', slot
     # the model will be saved to local disk as specified by the 'model_save_path' in cfg
     :param train_file: contains data to fit
     :param config: configuration file path
-    :param model_file: model file containing pre-trained model(s), use the one specified in config if not given
+    :param model_file: specified model file to store  pre-trained model(s), save to the one specified in cfg if not given
     :param slotting: if True then load slotting configs from cfg(default = parameters.yaml), no slotting if False
     :param plotting: if True then plot the decisions on training data, no plotting if False
     :return: decision functions on training data
